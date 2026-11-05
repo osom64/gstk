@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GŠTK teorijos testas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one centered column like a range card — header strip, control panel, question card, hit-tally strip. */
+:root{
+  --bg:#ECEEE3; --surface:#F8F9F2; --surface-2:#E2E5D6; --ink:#1D2217; --muted:#5C6452; --line:#CDD2BE;
+  --olive:#46552A; --olive-ink:#F4F6EC; --brass:#A8711A; --good:#2E7A47; --good-bg:#DCEEDD; --bad:#B23E2C; --bad-bg:#F6DCD6;
+  --f-display:"Saira Stencil One","Arial Narrow",Impact,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13160F; --surface:#1B1F15; --surface-2:#242A1C; --ink:#E5E9D8; --muted:#9BA38B; --line:#323A27;
+  --olive:#7F9450; --olive-ink:#12150D; --brass:#D9A145; --good:#5DB97B; --good-bg:#1D3424; --bad:#E5735E; --bad-bg:#3D1F19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13160F; --surface:#1B1F15; --surface-2:#242A1C; --ink:#E5E9D8; --muted:#9BA38B; --line:#323A27;
+  --olive:#7F9450; --olive-ink:#12150D; --brass:#D9A145; --good:#5DB97B; --good-bg:#1D3424; --bad:#E5735E; --bad-bg:#3D1F19; color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.chip:focus-within{outline:2px solid var(--brass);outline-offset:2px}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,7vw,52px);line-height:1;margin:0;letter-spacing:.02em;text-wrap:balance}
+h1 span{color:var(--brass)}
+.top-meta{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.panel h2{margin:0;font-size:15px;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+.lede{margin:0;max-width:62ch;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 12px 6px 10px;background:var(--bg);font-size:14px;cursor:pointer;user-select:none}
+.chip input{accent-color:var(--olive);margin:0}
+.chip .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.chip:has(input:checked){border-color:var(--olive);background:var(--surface-2)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:8px 14px;font-family:var(--f-mono);font-size:14px;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--olive);color:var(--olive-ink)}
+.linkbtn{background:none;border:0;padding:0;color:var(--brass);font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.toggle input{accent-color:var(--olive);width:16px;height:16px}
+.btn{border:0;border-radius:6px;padding:12px 20px;font-weight:600;background:var(--olive);color:var(--olive-ink);display:inline-flex;align-items:center;gap:10px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--surface-2);filter:none}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+kbd{font-family:var(--f-mono);font-size:11px;border:1px solid currentColor;border-radius:3px;padding:0 4px;opacity:.7}
+.start-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.count-note{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+
+/* scoreboard */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.cell{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cell .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cell .v{font-family:var(--f-mono);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.cell.good .v{color:var(--good)} .cell.bad .v{color:var(--bad)}
+@media (max-width:460px){.board{grid-template-columns:repeat(2,1fr)}}
+.tally{display:flex;flex-wrap:wrap;gap:3px}
+.tally i{width:10px;height:10px;border-radius:2px;background:var(--surface-2);border:1px solid var(--line)}
+.tally i.ok{background:var(--good);border-color:var(--good)}
+.tally i.no{background:var(--bad);border-color:var(--bad)}
+.tally i.cur{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.bar{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.bar > div{height:100%;background:var(--brass);width:0;transition:width .25s ease}
+
+/* question */
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px;display:flex;flex-direction:column;gap:18px}
+.qhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.qsec{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass)}
+.qnum{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.qtext{font-size:clamp(18px,2.6vw,21px);font-weight:600;line-height:1.4;margin:0;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:grid;grid-template-columns:32px 1fr auto;gap:12px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:12px 14px;transition:border-color .12s,background .12s,transform .08s}
+.opt:hover:not([disabled]){border-color:var(--olive);background:var(--surface-2)}
+.opt:active:not([disabled]){transform:scale(.995)}
+.opt .key{font-family:var(--f-mono);font-weight:600;font-size:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--muted)}
+.opt .txt{min-width:0}
+.opt .mark{font-family:var(--f-mono);font-weight:600;font-size:13px}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:var(--good);background:var(--good-bg)}
+.opt.correct .key{background:var(--good);border-color:var(--good);color:var(--surface)}
+.opt.correct .mark{color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt.wrong .key{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.opt.wrong .mark{color:var(--bad)}
+.opt.dim{opacity:.55}
+.feedback{border-left:3px solid var(--good);background:var(--surface-2);padding:12px 14px;border-radius:0 6px 6px 0;display:flex;flex-direction:column;gap:4px}
+.feedback.no{border-left-color:var(--bad)}
+.feedback b{font-size:15px}
+.feedback.ok b{color:var(--good)} .feedback.no b{color:var(--bad)}
+.feedback p{margin:0;color:var(--ink);font-size:15px}
+.qfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.hint{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.015)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.opt.correct.picked{animation:pop .3s ease}
+.opt.wrong{animation:shake .25s ease}
+
+/* results */
+.result-top{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center}
+@media (max-width:520px){.result-top{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.target{width:170px;height:170px;max-width:100%}
+.grade{font-family:var(--f-display);font-size:clamp(40px,8vw,60px);line-height:1;margin:0}
+.verdict{margin:6px 0 0;color:var(--muted)}
+.secs{display:flex;flex-direction:column;gap:10px}
+.secrow{display:grid;grid-template-columns:minmax(0,1fr) 120px 64px;gap:12px;align-items:center;font-size:14px}
+@media (max-width:460px){.secrow{grid-template-columns:minmax(0,1fr) 70px 56px}}
+.secrow .meter{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.secrow .meter div{height:100%;background:var(--good)}
+.secrow .pct{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.mist{display:flex;flex-direction:column;gap:10px}
+.mist article{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--bg);display:flex;flex-direction:column;gap:6px}
+.mist .mq{font-weight:600;margin:0}
+.mist .ma{margin:0;font-size:14px}
+.mist .ma.y{color:var(--bad)} .mist .ma.c{color:var(--good)}
+.mist .me{margin:0;font-size:13px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Ginklo šaulio tarnybai kursas · teisinis reguliavimas</span>
+      <h1>GŠTK <span>testas</span></h1>
+    </div>
+    <div class="top-meta" id="topMeta"></div>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="panel">
+    <p class="lede">Klausimai sudaryti iš visų keturių kurso teorijos dalių: GŠKĮ, LŠS įstatymo, būtinosios ginties, tirų ir pratybų saugos taisyklių. Atsakymas įvertinamas iškart, su trumpu paaiškinimu.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="row" style="justify-content:space-between"><h2>Temos</h2><span class="row"><button class="linkbtn" id="selAll" type="button">Visos</button><button class="linkbtn" id="selNone" type="button">Nė vienos</button></span></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <h2>Klausimų skaičius</h2>
+      <div class="row">
+        <div class="seg" id="countSeg" role="group" aria-label="Klausimų skaičius">
+          <button type="button" data-n="20">20</button><button type="button" data-n="50">50</button><button type="button" data-n="100">100</button><button type="button" data-n="200">200</button><button type="button" data-n="0">Visi</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="shuffleOpts" checked> Maišyti atsakymų tvarką</label>
+      </div>
+    </div>
+    <div class="start-foot">
+      <span class="count-note" id="countNote"></span>
+      <div class="actions">
+        <button class="btn ghost" id="retryOld" type="button" hidden></button>
+        <button class="btn" id="startBtn" type="button">Pradėti testą <kbd>Enter</kbd></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="board">
+      <div class="cell"><span class="k">Klausimas</span><span class="v" id="sPos">0/0</span></div>
+      <div class="cell good"><span class="k">Teisingi</span><span class="v" id="sOk">0</span></div>
+      <div class="cell bad"><span class="k">Klaidos</span><span class="v" id="sNo">0</span></div>
+      <div class="cell"><span class="k">Tikslumas</span><span class="v" id="sPct">–</span></div>
+    </div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div class="tally" id="tally" aria-hidden="true"></div>
+    <article class="qcard" id="qcard">
+      <div class="qhead"><span class="qsec" id="qSec"></span><span class="qnum" id="qNum"></span></div>
+      <p class="qtext" id="qText"></p>
+      <div class="opts" id="opts"></div>
+      <div id="fb"></div>
+      <div class="qfoot">
+        <span class="hint">Klavišai: <kbd>1</kbd>–<kbd>5</kbd> arba <kbd>A</kbd>–<kbd>E</kbd>, toliau <kbd>Enter</kbd></span>
+        <div class="actions">
+          <span id="endConfirm" class="confirm" hidden>Baigti dabar?<button class="btn ghost" id="endYes" type="button">Taip, rodyti rezultatą</button><button class="linkbtn" id="endNo" type="button">Tęsti</button></span>
+          <button class="btn ghost" id="endBtn" type="button">Baigti</button>
+          <button class="btn" id="nextBtn" type="button" disabled>Toliau →</button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="panel" hidden>
+    <div class="result-top">
+      <svg class="target" id="target" viewBox="0 0 200 200" role="img" aria-label="Rezultatas"></svg>
+      <div>
+        <span class="eyebrow">Rezultatas</span>
+        <p class="grade" id="rGrade"></p>
+        <p class="verdict" id="rVerdict"></p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="retryWrong" type="button">Kartoti klaidas</button>
+      <button class="btn ghost" id="again" type="button">Naujas testas</button>
+    </div>
+    <h2>Pagal temas</h2>
+    <div class="secs" id="rSecs"></div>
+    <h2 id="mistTitle">Klaidos</h2>
+    <div class="mist" id="rMist"></div>
+  </section>
+</div>
+
+<script>
+const SECTIONS = {
+  R: "Reikalavimai ir reputacija",
+  K: "Ginklų kategorijos",
+  D: "Draudžiami ginklai",
+  L: "Leidimai ir registravimas",
+  I: "Įsigijimas, paveldėjimas, realizavimas",
+  S: "Laikymas, gabenimas, taisymas",
+  N: "Ginklo naudojimas ir LŠS",
+  G: "Būtinoji gintis ir sulaikymas",
+  P: "Pareigos, paėmimas, panaikinimas",
+  T: "Saugos taisyklės ir tirai",
+  U: "Situaciniai uždaviniai"
+};
+// [skyrius, klausimas, [teisingas, klaidingi...], paaiškinimas, (fiksuotas teisingo indeksas – tada variantai nemaišomi)]
+const Q = [
+// ===== R: Reikalavimai =====
+["R","Nuo kokio amžiaus šaulys gali įsigyti ir turėti šaulio tarnybai skirtus B ir C kategorijų ginklus?",["Ne jaunesnis kaip 18 metų","Ne jaunesnis kaip 16 metų","Ne jaunesnis kaip 21 metų","Ne jaunesnis kaip 25 metų"],"GŠKĮ 13 str. 9 d.: ne jaunesni kaip 18 metų šauliai, išlaikę egzaminą ir gavę leidimus."],
+["R","Kieno nustatyta tvarka šauliai laiko egzaminą, norėdami įsigyti ginklą šaulio tarnybai?",["Lietuvos šaulių sąjungos vado","Policijos generalinio komisaro","Krašto apsaugos ministro","Vidaus reikalų ministro"],"Šauliai egzaminuojami LŠS vado nustatyta tvarka."],
+["R","Ką papildomai suteikia leidimas laikyti ginklus ir leidimas nešiotis ginklus šaulio tarnybai?",["Teisę nešiotis savigynai B kategorijos trumpuosius šaunamuosius ginklus taip, kad kiti jų nematytų","Teisę medžioti B kategorijos ginklais","Teisę nešiotis ilgąjį ginklą matomoje vietoje bet kur","Teisę prekiauti šaudmenimis kitiems šauliams"],"GŠKĮ 13 str.: leidimai suteikia teisę nešiotis savigynai B kat. trumpuosius ginklus paslėptus."],
+["R","Nuo kokio amžiaus šaudymo sporto organizacijų nariai gali be leidimų įsigyti D kategorijos pneumatinius ginklus sportui?",["16 metų","14 metų","18 metų","12 metų"],"Sportui D kategorijos pneumatinius ginklus be leidimų gali įsigyti nuo 16 metų šaudymo sporto organizacijų nariai."],
+["R","Kokie dokumentai reikalingi 16–18 m. sporto organizacijos nariui, perkančiam D kategorijos pneumatinį ginklą sportui?",["Asmens dokumentas, sporto organizacijos tarpininkavimo raštas ir nario pažymėjimas","Tik asmens dokumentas","Policijos išduotas leidimas laikyti ginklus","Tėvų notariškai patvirtintas sutikimas"],"Pateikiami asmens tapatybę patvirtinantys dokumentai, sporto organizacijos tarpininkavimo raštas ir nario pažymėjimas."],
+["R","Kokio amžiaus fiziniai asmenys D kategorijos ginklus gali įsigyti be leidimų (bendra taisyklė)?",["Nuo 18 metų, pateikę asmens tapatybės dokumentą","Nuo 16 metų, pateikę mokinio pažymėjimą","Nuo 21 metų, su policijos leidimu","Nuo 14 metų su tėvų sutikimu"],"D kategorijos ginklus be leidimų gali įsigyti fiziniai asmenys nuo 18 metų."],
+["R","Kurį A kategorijos ginklą šaulys GALI įsigyti šaulio tarnybai?",["Automatinį šaunamąjį ginklą (GŠKĮ 3 str. 2 p.)","Šaunamąjį ginklą, užmaskuotą kaip kitas daiktas","Granatsvaidį","Automatinį ginklą su juostiniu šovinių padavimu"],"Šaulio tarnybai leidžiami A kategorijos ginklai, išvardyti GŠKĮ 3 str. 2, 6, 7, 8 ir 9 punktuose."],
+["R","Kuriuos A kategorijos priedėlius šaulys gali įsigyti šaulio tarnybai?",["Lazerinius taikiklius, naktinius taikiklius ir duslintuvus","Tik duslintuvus","Tik naktinius taikiklius","Jokių A kategorijos priedėlių"],"Leidžiami lazeriniai taikikliai, naktiniai taikikliai ir duslintuvai."],
+["R","Ar šaulys gali į asmeninę nuosavybę įsigyti šiuolaikinį kulkosvaidį su juostiniu šovinių padavimu?",["Ne","Taip, turėdamas A kategorijos leidimą","Taip, jei kalibras mažesnis nei 12,7 mm","Taip, gavęs LŠS vado leidimą"],"Ginklai su juostiniu šovinių padavimu (GŠKĮ 3 str. 22 p.) nėra tarp šauliams leidžiamų – šauliai jų įsigyti negali."],
+["R","Kuriuose GŠKĮ 3 straipsnio punktuose išvardyti A kategorijos ginklai leidžiami šaulio tarnybai?",["2, 6, 7, 8 ir 9","1, 2, 3 ir 4","2, 5, 10 ir 22","6, 12, 13 ir 22"],"Šaulio tarnybai – GŠKĮ 3 str. 2, 6, 7, 8 ir 9 punktų ginklai."],
+["R","Kiek realiai paskirtos laisvės atėmimo bausmės už tyčinį smurtinį nusikaltimą turi viršyti, kad asmuo neterminuotai nebūtų laikomas nepriekaištingos reputacijos (GŠKĮ 18 str. 2 d. 1 p.)?",["6 metus","3 metus","10 metų","15 metų"],"Realiai paskirta bausmė viršija 6 metus laisvės atėmimo. Atkreipkite dėmesį į 2023-03-15 Konstitucinio Teismo nutarimą."],
+["R","Kiek metų turi praeiti po teistumo išnykimo ar panaikinimo, jei asmuo padarė tyčinį smurtinį nusikaltimą, už kurį didžiausia bausmė viršija 3 metus?",["15 metų","3 metai","5 metai","10 metų"],"GŠKĮ 18 str. 2 d. 2 p.: po teistumo išnykimo ar panaikinimo turi praeiti 15 metų."],
+["R","Kiek laiko asmuo nelaikomas nepriekaištingos reputacijos, jei per pastaruosius metus įsiteisėjusiu nuosprendžiu pripažintas padaręs baudžiamąjį nusižengimą?",["1 metus","3 metus","5 metus","Visam laikui"],"GŠKĮ 18 str. 2 d. 8 p.: teisė įsigyti ginklą prarandama 1 metų laikotarpiui."],
+["R","Asmuo atleistas nuo baudžiamosios atsakomybės už nusikaltimą, padarytą panaudojant fizinį smurtą (max bausmė neviršija 3 m.). Kiek laiko jis nelaikomas nepriekaištingos reputacijos?",["3 metus nuo atleidimo dienos","1 metus","15 metų","Visam laikui"],"GŠKĮ 18 str. 2 d. 7 p.: nuo atleidimo nuo baudžiamosios atsakomybės dienos turi praeiti 3 metai."],
+["R","Per kokį laikotarpį taikyti Organizuoto nusikalstamumo prevencijos įstatymo teismo įpareigojimai lemia, kad asmuo nelaikomas nepriekaištingos reputacijos?",["Per pastaruosius 5 metus","Per pastaruosius 3 metus","Per pastaruosius metus","Per pastaruosius 10 metų"],"GŠKĮ 18 str. 2 d. 10 p.: taikomi įpareigojimai ar jie buvo skirti per pastaruosius 5 metus."],
+["R","Asmeniui leidimas buvo panaikintas dėl ginklų apyvartos pažeidimų. Po kiek laiko jis vėl laikomas nepriekaištingos reputacijos?",["Kai praeina 3 metai","Kai praeina 1 metai","Kai praeina 6 mėnesiai","Niekada"],"GŠKĮ 18 str. 2 d. 13 p.: nuo panaikinimo turi praeiti 3 metai."],
+["R","Kaip GŠKĮ apibrėžia nepriekaištingą reputaciją?",["Atmetimo būdu: išvardijamos aplinkybės, kurioms esant reputacija nelaikoma nepriekaištinga","Pagal darbdavio rekomendaciją","Pagal LŠS vado charakteristiką","Pagal policijos pareigūno vertinimą pokalbio metu"],"Nepriekaištinga reputacija apibrėžiama atmetimo būdu – jei išvardytų aplinkybių nėra, asmuo laikomas nepriekaištingos reputacijos."],
+["R","Ar nepriekaištingos reputacijos laikomas asmuo, kuris tik įtariamas padaręs GŠKĮ 18 str. 2 d. 1–5 p. nurodytą nusikalstamą veiką?",["Ne","Taip, kol nėra apkaltinamojo nuosprendžio","Taip, jei veika padaryta dėl neatsargumo","Taip, jei jis yra šaulys"],"GŠKĮ 18 str. 2 d. 9 p.: įtariamas ar kaltinamas asmuo nelaikomas nepriekaištingos reputacijos."],
+["R","Asmuo per metus pakartotinai padarė administracinį nusižengimą, šiurkščiai pažeisdamas medžioklę reglamentuojančius teisės aktus. Ar jis laikomas nepriekaištingos reputacijos?",["Ne","Taip, nes tai tik administracinis nusižengimas","Taip, jei sumokėjo baudas","Taip, jei jis nėra medžiotojas"],"GŠKĮ 18 str. 2 d. 11 p."],
+["R","Asmuo, apsvaigęs nuo alkoholio, per metus pakartotinai padarė teisės pažeidimą. Ar jis laikomas nepriekaištingos reputacijos?",["Ne","Taip","Taip, jei pažeidimai nesusiję su ginklais","Taip, jei apsvaigimas buvo mažesnis nei 0,4 promilės"],"GŠKĮ 18 str. 2 d. 12 p."],
+["R","Kas nutinka, jei atsiranda sąlyga, dėl kurios ginklą turintis asmuo nebeatitinka įsigijimo ir laikymo sąlygų?",["Ginklai, priedėliai, šaudmenys, leidimai ir ginklų pažymėjimai paimami iki sąlygų išnykimo","Asmeniui skiriamas 6 mėn. terminas ginklams parduoti","Ginklai iškart sunaikinami","Nieko – leidimas galioja iki termino pabaigos"],"Atsiradus tokiai sąlygai, ginklai ir dokumentai paimami iki sąlygų išnykimo."],
+["R","Kokio senumo gali būti sveikatos patikrinimo išvada jos pateikimo dieną?",["Ne senesnė kaip 3 mėnesių","Ne senesnė kaip 1 mėnesio","Ne senesnė kaip 6 mėnesių","Ne senesnė kaip 12 mėnesių"],"GŠKĮ 17 str. 1 d. 3 p.: išvados išdavimo data – ne vėlesnė negu 3 mėnesiai."],
+["R","Ilgesniam kaip kiek laiko išvykstantys LR piliečiai privalo deklaruoti savo išvykimą?",["6 mėnesių","3 mėnesių","12 mėnesių","1 mėnesio"],"Gyvenamosios vietos deklaravimo įstatymas: išvykstant ilgiau kaip 6 mėnesiams."],
+["R","Ką daryti su ginklais, kai šaulys deklaruoja išvykimą iš Lietuvos?",["Realizuoti arba perduoti saugoti policijai","Palikti kartu gyvenančiam šeimos nariui","Perduoti saugoti LŠS rinktinei","Išsivežti į užsienį be jokių formalumų"],"Įsigytus ginklus privaloma realizuoti arba perduoti saugoti policijai."],
+["R","Asmuo gyvena kartu su asmenimis, kurie nelaikomi nepriekaištingos reputacijos. Kada jis vis dėlto gali įsigyti ginklą?",["Jei įsipareigoja laikyti ginklą ne savo būste, o kitose reikalavimus atitinkančiose vietose","Jei tie asmenys raštu sutinka","Jei įrengia dvigubą seifą","Jokiu atveju"],"Draudimas netaikomas, jei ginklas laikomas ne savo būste, o kitose reikalavimus atitinkančiose vietose."],
+["R","Kiek laiko asmuo negali įsigyti ginklo, jei jam dėl ginklo praradimo buvo panaikintas leidimas?",["3 metus","1 metus","5 metus","6 mėnesius"],"GŠKĮ 17 str. 1 d.: nuo panaikinimo dėl ginklo praradimo turi praeiti 3 metai."],
+["R","Kam NETAIKOMAS reikalavimas išklausyti pilietinio pasipriešinimo kursą?",["Šauliams","Medžiotojams","Sportininkams","Kolekcininkams"],"GŠKĮ 17 str. 5 d.: netaikoma šauliams, pareigūnams, profesinės karo tarnybos kariams, kariams savanoriams."],
+["R","Kuri institucija policijai perduoda duomenis, kad asmuo gali kelti grėsmę valstybės saugumui?",["Valstybės saugumo departamentas","Lietuvos šaulių sąjunga","Generalinė prokuratūra","Lietuvos kariuomenė"],"Tokius duomenis VSD perduoda policijos įstaigai."],
+["R","Kas nustato reikalavimus ginklų laikymo sąlygoms?",["Policijos generalinio komisaro įsakymas","LŠS vado įsakymas","Krašto apsaugos ministro įsakymas","Seimo nutarimas"],"Policijos generalinio komisaro įsakymas „Dėl ginklų … laikymo, saugojimo ir laikino saugojimo reikalavimų patvirtinimo“."],
+["R","Ką 2023-03-15 Konstitucinis Teismas pripažino prieštaraujančiu teisinės valstybės principui?",["Kad asmenys, kuriems realiai paskirta daugiau nei 6 m. bausmė, neterminuotai nelaikomi nepriekaištingos reputacijos","Šaulių teisę įsigyti automatinius ginklus","Sveikatos patikrinimo reikalavimą","Pilietinio pasipriešinimo kurso reikalavimą"],"KT nutarimas dėl GŠKĮ 18 str. 2 d. 1 p. – neterminuoto nepriekaištingos reputacijos nepripažinimo."],
+["R","Ar šauliui galima įsigyti ginklą, jei policija turi duomenų, kad jis kelia grėsmę kitų asmenų gyvybei ar viešajai tvarkai?",["Ne – policija nurodo atsisakymo motyvus","Taip, jei jis išlaikė egzaminą","Taip, jei turi LŠS vado rekomendaciją","Taip, bet tik B kategorijos"],"Tokiu atveju leidimas neišduodamas, o policija nurodo atsisakymo motyvus."],
+
+// ===== K: Kategorijos =====
+["K","Kuriai kategorijai priskiriami automatiniai šaunamieji ginklai?",["A","B","C","D"],"GŠKĮ 3 str. 2 p."],
+["K","Kuriai kategorijai priskiriami pertaisomieji trumpieji šaunamieji ginklai?",["B","A","C","D"],"GŠKĮ 4 str. 1 p."],
+["K","Kuriai kategorijai priskiriami vienašūviai trumpieji šaunamieji ginklai?",["B","A","C","D"],"GŠKĮ 4 str. 2 p."],
+["K","Kuriai kategorijai priskiriamas pusiau automatinis pistoletas su 15 šovinių dėtuve?",["B","A","C","D"],"Pusiau automatiniai trumpieji ginklai – B kategorija, jei neviršija 3 str. 7 p. ribų (daugiau kaip 21 šovinys)."],
+["K","Centrinio įskėlimo pusiau automatinis trumpasis ginklas priskiriamas A kategorijai, kai be pakartotinio užtaisymo galima iššauti daugiau kaip:",["21 šovinį (dėtuvė talpina daugiau kaip 20)","11 šovinių (dėtuvė talpina daugiau kaip 10)","15 šovinių","30 šovinių"],"GŠKĮ 3 str. 7 p."],
+["K","Centrinio įskėlimo pusiau automatinis ilgasis ginklas priskiriamas A kategorijai, kai be pakartotinio užtaisymo galima iššauti daugiau kaip:",["11 šovinių (dėtuvė talpina daugiau kaip 10)","21 šovinį (dėtuvė talpina daugiau kaip 20)","5 šovinius","31 šovinį"],"GŠKĮ 3 str. 8 p."],
+["K","Pusiau automatinis ilgasis ginklas su sulankstoma ar teleskopine buože priskiriamas A kategorijai, jei jo ilgį galima sumažinti iki mažiau kaip:",["60 cm","50 cm","70 cm","80 cm"],"GŠKĮ 3 str. 9 p.: mažiau kaip 60 cm, neprarandant funkcijų, buožę pašalinant be įrankių."],
+["K","Kuriai kategorijai priskiriami pertaisomieji ilgieji šaunamieji ginklai?",["B","A","C","D"],"GŠKĮ 4 str. 4 p."],
+["K","Kuriai kategorijai priskiriami templiniai ginklai, kurių visa įtempimo jėga yra nuo 500 iki 1 200 N?",["B","A","C","D"],"GŠKĮ 4 str. 8 p."],
+["K","Kuriai kategorijai priskiriami templiniai ginklai, kurių visa įtempimo jėga viršija 1 200 N?",["A","B","C","D"],"GŠKĮ 3 str. 18 p."],
+["K","Kaip vertinami templiniai ginklai, kurių visa įtempimo jėga mažesnė negu 200 N?",["Jie ginklams nepriskiriami","D kategorija","C kategorija","Draudžiami civilinėje apyvartoje"],"Ekspertų komisijos 2011-03-24 protokolas Nr. 12, 23.7 p."],
+["K","Kuriai kategorijai priskiriami pneumatiniai ginklai, kurių sviedinio kinetinė energija viršija 7,5 J?",["C","D","B","A"],"GŠKĮ 5 str. 1 p."],
+["K","Kuriai kategorijai priskiriami pneumatiniai ginklai, kurių sviedinio kinetinė energija yra nuo 2,5 iki 7,5 J?",["D","C","B","Ginklams nepriskiriami"],"GŠKĮ 6 str. 1 p."],
+["K","Kuriai kategorijai priskiriami signaliniai ir dujiniai ginklai?",["C","D","B","A"],"GŠKĮ 5 str. 2 p."],
+["K","Kuriai kategorijai priskiriamos senovinių ginklų kopijos?",["C","D","B","A"],"GŠKĮ 5 str. 3 p."],
+["K","Kuriai kategorijai priskiriami senoviniai ginklai?",["D","C","B","A"],"GŠKĮ 6 str. 5 p."],
+["K","Kuriai kategorijai priskiriami šaunamieji ginklai, kurių sviedinio kinetinė energija yra nuo 2,5 iki 7,5 J?",["C","D","B","Ginklams nepriskiriami"],"GŠKĮ 5 str. 4 p.: nedidelės galios šaunamieji ginklai – C kategorija (pneumatiniai tokios galios – D)."],
+["K","Kuriai kategorijai priskiriami dujų įrenginiai (dujų balionėliai)?",["D","C","B","Ginklams nepriskiriami"],"GŠKĮ 6 str. 2 p."],
+["K","Kuriai kategorijai priskiriami elektros šoko įtaisai (nedraudžiami)?",["D","C","B","A"],"GŠKĮ 6 str. 4 p."],
+["K","Kuriai kategorijai priskiriami šaltieji ginklai, nepriskirti prie draudžiamųjų?",["D","C","B","Jie nėra ginklai"],"GŠKĮ 6 str. 3 p."],
+["K","Kuriai kategorijai priskiriami A ir B kategorijų ginklai, iki 2016-04-08 perdirbti į visiškai netinkamus naudoti?",["C","D","Ginklams nepriskiriami","Lieka pradinėje kategorijoje"],"GŠKĮ 5 str. 5 p."],
+["K","Kuriai kategorijai priskiriamas B kategorijos ginklas, perdirbtas į signalinį ar imitacinį?",["B","C","D","A"],"GŠKĮ 4 str. 7 p.: lieka B kategorijoje."],
+["K","Kuriai kategorijai priskiriamas A kategorijos ginklas, perdirbtas į dujinį ar signalinį?",["A","B","C","D"],"GŠKĮ 3 str. 10 p.: lieka A kategorijoje."],
+["K","Kas yra senovinio ginklo kopija?",["Šaunamasis ginklas, pagamintas 1899 m. ir vėliau pagal iki 1870 m. sukurtą modelį","Ginklas, pagamintas iki 1899 m. pagal iki 1870 m. modelį","Bet koks ginklas, senesnis nei 50 metų","Muziejinio ginklo muliažas be šaudymo galimybės"],"Senovinio ginklo kopija – pagaminta 1899 m. ir vėliau pagal iki 1870 m. modelį."],
+["K","Kas yra senovinis ginklas?",["Šaunamasis ginklas, kurio modelis sukurtas iki 1870 m. ir kuris pagamintas iki 1899 m.","Ginklas, pagamintas iki 1945 m.","Ginklas, pagamintas po 1899 m. pagal seną modelį","Bet koks titnaginis ginklas"],"Senovinis ginklas: modelis iki 1870 m., pagamintas iki 1899 m."],
+["K","Kas yra pneumatinis ginklas?",["Nešaunamasis ginklas, kurio sviedinio judėjimas atsiranda dėl suspausto oro ar kitų dujų jėgos","Šaunamasis ginklas, šaudantis dujų užtaisais","Ginklas, paleidžiantis dirginančiąsias dujas","Ginklas, veikiantis spyruoklės jėga"],"Pneumatinis ginklas – nešaunamasis ginklas."],
+["K","Prie kokių ginklų priskiriami dujiniai pistoletai (revolveriai)?",["Prie šaunamųjų ginklų","Prie nešaunamųjų ginklų","Prie dujų įrenginių","Prie šaltųjų ginklų"],"Dujiniai pistoletai (revolveriai) priskiriami šaunamiesiems ginklams."],
+["K","Kas yra dujų įrenginys?",["Nešaunamasis ginklas, iš kurio paleidžiamos kenksmingosios, dirginančiosios ar kitos dujinės medžiagos","Šaunamasis ginklas, šaudantis dujų užtaisais","Pneumatinio ginklo dalis","Signalinis pirotechnikos įtaisas"],"Dujų įrenginys (pvz., dujų balionėlis) – nešaunamasis ginklas."],
+["K","Kas yra signalinis ginklas?",["Šaunamasis ginklas, skirtas garso ar šviesos signalui sukurti signaliniu pirotechnikos įtaisu ar šaudmenimis","Nešaunamasis ginklas, skleidžiantis garsą","Bet koks ginklas su prožektoriumi","Starto pistoletas be šovinio lizdo"],"Signalinis ginklas – šaunamasis ginklas."],
+["K","Kas NELAIKOMA šaltaisiais ginklais?",["Ūkinės ar buitinės paskirties įrankiai","Durklai","Kardai","Kalavijai"],"Šaltaisiais ginklais nelaikomi ūkinės ar buitinės paskirties įrankiai."],
+["K","Kas yra elektros šoko įtaisas?",["Nešaunamasis ginklas, skirtas tiesiogiai ar per atstumą taikiniui paveikti elektros srove","Šaunamasis ginklas su elektriniu nuleistuku","C kategorijos savigynos priemonė","Dujų įrenginio rūšis"],"Elektros šoko įtaisas – nešaunamasis ginklas."],
+["K","Kokio kalibro graižtviniai šaunamieji ginklai priskiriami A kategorijai (išskyrus medžioklinius ir senovinius)?",["12,7 mm ir didesnio","9 mm ir didesnio","7,62 mm ir didesnio","20 mm ir didesnio"],"GŠKĮ 3 str. 22 p."],
+["K","Kokio kalibro lygiavamzdžiai šaunamieji ginklai priskiriami A kategorijai?",["20 mm ir didesnio","12,7 mm ir didesnio","12 kalibro ir didesnio","30 mm ir didesnio"],"GŠKĮ 3 str. 22 p."],
+["K","Kuriai kategorijai priskiriami šaudmenys su šarvamušiais, sprogstamaisiais ar padegamaisiais sviediniais?",["A","B","C","D"],"GŠKĮ 3 str. 4 p."],
+["K","Kuriai kategorijai priskiriami pistoletų ir revolverių šoviniai su ekspansyviosiomis kulkomis (ne medžioklei)?",["A","B","C","D"],"GŠKĮ 3 str. 5 p."],
+["K","Kokios kategorijos yra LK automatiniams ginklams skirti imitaciniai šaudmenys?",["A – tos pačios kategorijos kaip ginklas, kuriame jie naudojami","B","C","Imitaciniai šoviniai prie šaudmenų nepriskiriami"],"Imitaciniai šaudmenys priskiriami tai kategorijai, kuriai priskirtas ginklas, kuriame jie naudojami."],
+["K","Kuriai kategorijai priskiriamos granatos ir granatsvaidžiai, tarp jų ir ašarinės granatos?",["A","B","C","D"],"GŠKĮ 3 str. 13 p."],
+["K","Kuriai kategorijai priskiriami šaunamieji ginklai, užmaskuoti kaip kiti daiktai?",["A","B","C","Draudžiami, bet nepriskiriami jokiai kategorijai"],"GŠKĮ 3 str. 3 p."],
+["K","Kuriai kategorijai priskiriami šaunamieji ginklai, kurių konstrukcija leidžia juos naudoti išardytus ar lengvai paslėpti?",["A","B","C","D"],"GŠKĮ 3 str. 19 p."],
+["K","Kuriai kategorijai priskiriami ilgieji vienašūviai graižtviniai ir lygiavamzdžiai šaunamieji ginklai?",["B","A","C","D"],"GŠKĮ 4 str. 5 p."],
+["K","Kuriai kategorijai priskiriami liepsnosvaidžiai ir padegamieji sviediniai?",["A","B","C","D"],"GŠKĮ 3 str. 15 p."],
+["K","Kuriai kategorijai priskiriami šaudmenys, skirti tik A kategorijos ginklams?",["A","B","Tos kategorijos, kurios yra kalibras","C"],"GŠKĮ 3 str. 21 p."],
+["K","Ar D kategorijos ginklų paskirtis yra kaip nors formalizuojama?",["Ne",
+"Taip – tik savigyna","Taip – tik sportas","Taip – nurodoma pirkimo dokumentuose"],"D kategorijos ginklų paskirtis nėra kaip nors formalizuojama."],
+
+// ===== D: Draudžiami =====
+["D","Kurie ginklai Lietuvoje draudžiami, jei neturi identifikacinių numerių?",["A, B ir C kategorijų","Tik A kategorijos","Tik B kategorijos","Visų kategorijų, įskaitant D"],"GŠKĮ 7 str. 2 d."],
+["D","Ką savininkas privalo padaryti su A, B, C kategorijų ginklu be identifikacinio numerio?",["Pažymėti numeriu ir įregistruoti arba perdirbti į visiškai netinkamą naudoti; kitaip – sunaikinti","Iškart sunaikinti","Parduoti per prekybininką","Perduoti muziejui"],"Savininko pasirinkimu – pažymėti ir įregistruoti arba perdirbti; neatlikus – sunaikinti."],
+["D","Kam NETAIKOMAS draudimas turėti A, B, C kategorijų ginklus be identifikacinių numerių?",["Valstybinėms kriminalistinės ekspertizės įstaigoms ir muziejams","LŠS rinktinėms","Medžiotojų klubams","Tirų savininkams"],"Netaikoma kriminalistinės ekspertizės įstaigoms, nacionaliniams, respublikiniams, savivaldybių muziejams ir tam tikriems kolekcininkams."],
+["D","Iki kada asmenys, turintys dujinius pistoletus, senovinius ginklus, jų kopijas ir 2,5–7,5 J šaunamuosius ginklus, privalėjo juos užregistruoti?",["Iki 2014 m. sausio 1 d.","Iki 2011 m. kovo 1 d.","Iki 2016 m. balandžio 8 d.","Iki 2020 m. sausio 1 d."],"Įsigaliojus pakeitimams nuo 2011-03-01, juos reikėjo užregistruoti iki 2014-01-01."],
+["D","Ar draudžiami savadarbiai šaunamieji ginklai?",["Taip, bet kokie – nepriklausomai nuo šūvio galios","Tik jei galia viršija 7,5 J","Ne, jei pagaminti savo reikmėms","Tik jei neturi identifikacinio numerio"],"Bet kokie savadarbiai šaunamieji ginklai yra draudžiami civilinėje apyvartoje."],
+["D","Kodėl begarsiai šoviniai draudžiami?",["Jų konstrukcija leidžia uždaryti parako dujas tūtelėje, visiškai panaikinant šūvio garsą ir blykstę","Jie skirti tik A kategorijos ginklams","Jie sprogstamieji","Jie neturi identifikacinių žymių"],"Begarsiai šoviniai civilinėje apyvartoje draudžiami."],
+["D","Kurie šoviniai draudžiami civilinėje apyvartoje?",["Šoviniai, kurių kulkos su kieto metalo šerdimi ar kieto metalo apvalkalu","Šoviniai su švino kulkomis","Šoviniai su vario apvalkalu (FMJ)","Šoviniai su plastikine kulka treniruotėms"],"Draudžiami šoviniai su kieto metalo šerdimi ar kieto metalo apvalkalu."],
+["D","Ar lazeriniai taikikliai draudžiami civilinėje apyvartoje?",["Taip, išskyrus naudojamus sportui ir šaulio ar kario savanorio tarnybai","Ne, jie visiškai laisvi","Taip, be jokių išimčių","Tik raudonos spalvos"],"Lazeriniai taikikliai draudžiami, išskyrus sportui ir šaulio, kario savanorio ar kito aktyviojo rezervo kario tarnybai."],
+["D","Kurie šaltieji ginklai draudžiami civilinėje apyvartoje?",["Kastetai, blakštai, mėtomosios žvaigždės ir kiti smogiamojo ir svaidomojo pobūdžio ginklai","Kardai ir durklai","Medžiokliniai peiliai","Kalavijai"],"Draudžiami smogiamojo ir svaidomojo pobūdžio šaltieji ginklai."],
+["D","Kurie elektros šoko įtaisai draudžiami civilinėje apyvartoje?",["Su iššaunamosiomis adatomis, sujungtomis laidais su įtampos šaltiniu","Kontaktiniai savigynos įtaisai","Visi elektros šoko įtaisai","Tik įtaisai, skirti gyvuliams varyti"],"Draudžiami įtaisai su iššaunamosiomis adatomis (išskyrus aplinkos ministerijai pavaldžias institucijas)."],
+["D","Ar tiesioginio kontakto elektros šoko įtaisai savigynai draudžiami civilinėje apyvartoje?",["Ne, jie priskiriami D kategorijai","Taip","Taip, išskyrus pareigūnams","Tik viešose vietose"],"D kategorijai priskiriami kontaktiniai elektros šoko įtaisai nėra draudžiami."],
+["D","Šaulys turi leidimą B kategorijos šaudmenims. Ar jis gali laikyti namuose po pratybų likusius A kategorijos šarvamušius šaudmenis?",["Ne – tai neteisėta ir užtraukia atsakomybę","Taip, jei kalibras sutampa","Taip, jei jie gauti iš LK","Taip, iki kitų pratybų"],"A kategorijos šaudmenys gali būti naudojami LK ar LŠS pratybų metu, bet jų laikymas neteisėtas net turint leidimą analogiškiems B kat. šaudmenims."],
+["D","Kurie dujų įrenginiai, signaliniai ir dujiniai ginklai draudžiami civilinėje apyvartoje?",["Su nuodingosiomis medžiagomis","Su ašarinėmis dujomis","Su pipirinėmis dujomis","Visi be išimties"],"Draudžiami dujų įrenginiai, signaliniai ir dujiniai ginklai bei šaudmenys su nuodingosiomis medžiagomis."],
+["D","Kurių ginklų dėtuvės draudžiamos civilinėje apyvartoje (išskyrus įstatymo išimtis)?",["Trumpųjų – talpinančios daugiau kaip 20, ilgųjų – daugiau kaip 10 šovinių","Trumpųjų – daugiau kaip 10, ilgųjų – daugiau kaip 20","Bet kokios daugiau kaip 30 šovinių","Bet kokios daugiau kaip 5 šovinių"],"GŠKĮ 7 str. 3 d.: 3 str. 7 p. ginklų dėtuvės >20, 8 p. ginklų dėtuvės >10 šovinių."],
+["D","Kurie ginklai ir šaudmenys Lietuvoje draudžiami pagal GŠKĮ 7 str. 1 d.?",["Visi, kuriuos draudžia LR tarptautinės sutartys","Tik A kategorijos","Visi automatiniai ginklai","Visi ginklai, pagaminti ne ES"],"LR draudžiami visi ginklai, priedėliai ir šaudmenys, kuriuos draudžia LR tarptautinės sutartys."],
+["D","Ar savadarbis 2 J galios šaunamasis įtaisas, atitinkantis šaunamojo ginklo požymius, yra teisėtas?",["Ne – savadarbiai šaunamieji ginklai draudžiami nepriklausomai nuo galios","Taip, nes galia mažesnė nei 2,5 J","Taip, jei neišnešamas iš namų","Taip, jei užregistruotas"],"Jei atitinka šaunamojo ginklo požymius ir yra savadarbis – jo gamyba, įsigijimas ir laikymas užtraukia atsakomybę."],
+
+// ===== L: Leidimai, registravimas =====
+["L","Kur šaulys pateikia prašymą išduoti leidimą laikyti (nešiotis) ginklus?",["Teritorinei policijos įstaigai pagal gyvenamąją vietą – tiesiogiai arba per PEPS","LŠS rinktinės vadui","Bet kuriai policijos įstaigai Lietuvoje","Vidaus reikalų ministerijai"],"Prašymas pateikiamas teritorinei policijos įstaigai pagal gyvenamąją vietą tiesiogiai arba per PEPS."],
+["L","Kokio amžiaus kartu gyvenančius asmenis šaulys turi nurodyti prašyme?",["Vyresnius kaip 14 metų","Vyresnius kaip 16 metų","Vyresnius kaip 18 metų","Visus, nepriklausomai nuo amžiaus"],"Prašyme nurodomi kartu gyvenantys asmenys, vyresni kaip 14 metų."],
+["L","Kokia forma pateikiama medicininio patikrinimo išvada?",["Forma 049/a","Forma 046/a","Forma 027/a","Forma 094/a"],"Medicininio patikrinimo išvada – Forma 049/a."],
+["L","Ar reikia pateikti medicininio patikrinimo išvadą (049/a), kai šaulys kreipiasi tik dėl leidimo patikslinimo?",["Ne","Taip"],"Taisyklių 7.2 p.: tikslinant leidimą išvados pateikti nereikia.",0],
+["L","Kokie dokumentai pateikiami kartu su pradiniu prašymu išduoti leidimą?",["Prašymas, medicininio patikrinimo išvada ir LŠS narystę patvirtinantys dokumentai","Prašymas ir egzamino išlaikymo pažyma","Tik prašymas ir nuotrauka","Prašymas, apsaugos sutartis ir ginklo pirkimo sutartis"],"Pradžioje: prašymas, 049/a išvada, dokumentai apie priklausymą LŠS. Egzamino pažyma ir deklaracija – vėliau."],
+["L","Kurio dokumento NEREIKIA pateikti kartu su pradiniu prašymu (jis pateikiamas po teigiamo sprendimo)?",["Pažymos apie išlaikytą egzaminą","Medicininio patikrinimo išvados","LŠS narystę patvirtinančio dokumento","Prašymo"],"Egzamino pažyma ir laikymo sąlygų deklaracija pateikiamos per 5 mėn. po teigiamo sprendimo."],
+["L","Per kiek laiko pareigūnas informuoja šaulį, kad prašymas gautas?",["Ne vėliau kaip per 5 darbo dienas","Per 3 kalendorines dienas","Per 10 darbo dienų","Per 30 kalendorinių dienų"],"Ne vėliau kaip per 5 darbo dienas."],
+["L","Per kiek laiko pareiškėjas turi pateikti trūkstamus ar netinkamai įformintus dokumentus?",["Ne vėliau kaip per 15 kalendorinių dienų","Per 5 darbo dienas","Per 30 kalendorinių dienų","Per 3 mėnesius"],"Per 15 kalendorinių dienų, kitaip prašymas nenagrinėjamas."],
+["L","Per kiek laiko turi būti atlikti patikrinimai ir priimtas sprendimas dėl leidimo?",["Ne vėliau kaip per 30 kalendorinių dienų","Per 15 kalendorinių dienų","Per 5 darbo dienas","Per 3 mėnesius"],"Patikrinimai atliekami ir sprendimas priimamas per 30 kalendorinių dienų."],
+["L","Per kiek laiko nuo sprendimo priėmimo šaulys apie jį informuojamas?",["Ne vėliau kaip per 3 darbo dienas","Per 5 darbo dienas","Per 10 kalendorinių dienų","Tą pačią dieną"],"Raštu arba per PEPS ne vėliau kaip per 3 darbo dienas."],
+["L","Per kiek laiko po teigiamo sprendimo šaulys turi pateikti egzamino pažymą ir laikymo sąlygų deklaraciją?",["Ne vėliau kaip per 5 mėnesius","Per 1 mėnesį","Per 3 mėnesius","Per 6 mėnesius"],"Ne vėliau kaip per 5 mėnesius nuo pranešimo gavimo."],
+["L","Kada kartu su deklaracija privaloma pateikti sutartį su apsaugos tarnyba?",["Kai laikoma daugiau kaip 12 vnt. B kategorijos ginklų ar laikomi A kategorijos ginklai","Kai laikoma daugiau kaip 5 ginklai","Visada","Tik laikant ginklus ne savo būste"],"Daugiau kaip 12 B kat. ginklų arba A kat. ginklai – reikalinga sutartis su apsaugos tarnyba."],
+["L","Kokiais ginklais turi būti ginkluoti apsaugos tarnybos darbuotojai, reaguojantys į signalizacijos suveikimą?",["B kategorijos","A kategorijos","C kategorijos","Ginkluotė nereglamentuojama"],"Apsaugos darbuotojai turi būti ginkluoti B kategorijos ginklais."],
+["L","Ką papildomai pateikti, jei ginklai bus saugomi pas subjektą, turintį leidimą laikyti ginklus?",["Ginklų saugojimo sutartį (sutikimą)","Notaro patvirtintą įgaliojimą","LŠS vado leidimą","Nieko papildomai"],"Kartu su deklaracija pateikiama ginklo saugojimo sutartis (sutikimas)."],
+["L","Per kiek laiko išduodamas leidimas, kai pateikti visi reikiami dokumentai (egzamino pažyma, deklaracija, sutartis)?",["Ne vėliau kaip per 5 darbo dienas","Per 30 kalendorinių dienų","Per 15 kalendorinių dienų","Per 3 darbo dienas"],"Leidimas išduodamas per 5 darbo dienas, įrašant duomenis į PLVIS."],
+["L","Kaip išduodamas leidimas laikyti (nešiotis) ginklus?",["Duomenis įrašant į PLVIS","Išduodant popierinę knygelę LŠS","Siunčiant registruotu laišku","Įrašant į asmens tapatybės kortelę"],"Leidimas išduodamas duomenis įrašant į Policijos licencijuojamos veiklos informacinę sistemą (PLVIS)."],
+["L","Ką kariai savanoriai gali pateikti vietoj sveikatos pažymos?",["Specialiojo statuso subjekto pažymą, kad turi teisę tarnybos metu nešiotis ginklą (ne senesnę kaip 3 mėn.)","Kario pažymėjimą","Dalinio vado rekomendaciją","Nieko – jiems taikoma ta pati tvarka"],"GŠKĮ 13 str. 9 d. pažyma, kurios išdavimo data – ne vėlesnė negu 3 mėnesiai."],
+["L","Kiek laiko galioja leidimas laikyti ir nešiotis ginklus (bendra taisyklė)?",["5 metus","2 metus","10 metų","Neterminuotai"],"Leidimas galioja 5 metus ir gali būti pratęsiamas kas 5 metai."],
+["L","Kiek laiko galioja pirmą kartą išduotas leidimas laikyti ir nešiotis A kategorijos ginklus šaulio tarnybai?",["2 metus","5 metus","1 metus","3 metus"],"Pirmą kartą išduotas – 2 metus, vėliau pratęsiamas kas 5 metai."],
+["L","Koks leidimas gali būti išduodamas fiziniams asmenims C kategorijos ginklams?",["Vienas bendras neterminuotas leidimas","Atskiras 5 metų leidimas kiekvienam ginklui","2 metų leidimas","Leidimo nereikia"],"Fiziniams asmenims gali būti išduodamas vienas bendras neterminuotas leidimas laikyti (nešiotis) C kategorijos ginklus."],
+["L","Per kiek laiko šaulys privalo įregistruoti padovanotą ar užsienyje įsigytą ginklą?",["Ne vėliau kaip per 10 kalendorinių dienų nuo ginklo dokumento gavimo","Per 30 kalendorinių dienų","Per 5 darbo dienas","Per 3 mėnesius"],"Per 10 kalendorinių dienų – teritorinėje policijos įstaigoje, išdavusioje leidimą."],
+["L","Kurioje policijos įstaigoje registruojamas padovanotas ginklas?",["Teritorinėje policijos įstaigoje, išdavusioje leidimą laikyti (nešiotis) ginklus","Bet kurioje policijos įstaigoje","Policijos departamente","Ten, kur ginklas buvo padovanotas"],"Registruojama įstaigoje, išdavusioje leidimą."],
+["L","Kurio dokumento NEREIKIA registruojant padovanotą ginklą?",["Egzamino išlaikymo pažymos","Dovanojimo sutarties","Paties ginklo","Asmens tapatybę patvirtinančio dokumento"],"Pateikiama: dovanojimo sutartis/paveldėjimo liudijimas, ginklas, asmens dokumentas, įsigijimo užsienyje dokumentai, prašymas, leidimas."],
+["L","Per kiek laiko po registravimo išduodamas ginklo pažymėjimas?",["Ne vėliau kaip per 5 kalendorines dienas","Per 10 darbo dienų","Per 30 kalendorinių dienų","Tą pačią dieną"],"Ginklas registruojamas PLVIS ir pažymėjimas išduodamas per 5 kalendorines dienas."],
+["L","Kurie ginklai prieš registravimą turi būti išbandyti ir iš jų sudarytos tūtelių ir kulkų kolekcijos?",["A ir B kategorijų graižtviniai trumpieji šaunamieji ginklai","Visi ilgieji ginklai","Tik A kategorijos automatiniai ginklai","C kategorijos dujiniai pistoletai"],"Visi A, B kat. graižtviniai trumpieji ginklai išbandomi ir sudaromos kolekcijos."],
+["L","Ginklo numeriai dokumentuose akivaizdžiai nesutampa dėl techninės klaidos. Per kiek laiko surašoma išvada ir ginklas įregistruojamas?",["Ne vėliau kaip per 10 darbo dienų","Per 5 kalendorines dienas","Per 30 kalendorinių dienų","Ginklas neregistruojamas"],"Patikrinama Ieškomų ginklų registre, surašoma išvada, registruojama per 10 darbo dienų."],
+["L","Ginklo modelis dokumentuose neatitinka iš dalies (pvz., dėl raidžių transkripcijos). Kaip elgiamasi?",["Išvada nerašoma – ginklas registruojamas su patikslintais duomenimis","Ginklas paimamas ekspertizei","Registravimas atsisakomas","Rašoma išvada, registruojama per 10 darbo dienų"],"Esant daliniam neatitikimui išvada nerašoma."],
+["L","Per kiek laiko išduodamas leidimo ar ginklo pažymėjimo dublikatas?",["Ne vėliau kaip per 5 darbo dienas","Per 10 kalendorinių dienų","Per 30 kalendorinių dienų","Per 3 darbo dienas"],"Dublikatas su žyma „D“ – per 5 darbo dienas nuo motyvuoto prašymo gavimo."],
+["L","Kokia žyma pažymimas leidimo dublikatas?",["„D“","„K“","„2“","„DUB“"],"Dublikatas išduodamas su žyma „D“."],
+["L","Iki kada asmuo privalo perregistruoti leidimą laikyti (nešiotis) ginklus?",["Ne vėliau kaip iki leidimo galiojimo pabaigos","Per 30 dienų po galiojimo pabaigos","Per 6 mėnesius po galiojimo pabaigos","Kai paragina policija"],"Ne vėliau kaip iki leidimo galiojimo pabaigos."],
+["L","Ką būtina nurodyti prašyme perregistruoti leidimą?",["Ar asmuo turi įsigijęs A kategorijos dėtuvių ir ar turi visus ginklus","Visų ginklų įsigijimo kainas","Per 5 metus iššautų šovinių kiekį","Šaudyklų, kuriose lankėsi, sąrašą"],"Prašyme nurodoma, ar turi A kat. dėtuvių ir ar turi visus ginklus."],
+["L","Kokios nuotraukos reikia perregistruojant leidimą, jei jos nėra policijos IS?",["Vienos 3x4 cm","Dviejų 3x4 cm","Vienos 4x6 cm","Nuotraukos nereikia"],"Viena nuotrauka 3x4 cm."],
+["L","Kada perregistruojant leidimą trumpųjų ginklų pakartotinai išbandyti nereikia?",["Jei nuo išbandymo (identifikavimo) nėra praėję 1 metai","Jei nuo išbandymo nėra praėję 5 metai","Niekada – visada reikia išbandyti","Jei ginklas nenaudotas"],"Jei nuo išbandymo nepraėjo 1 metai, pakartotinis išbandymas neatliekamas."],
+["L","Per kiek laiko perregistruojamas leidimas, kai pateikti visi dokumentai?",["Ne vėliau kaip per 5 darbo dienas","Per 30 kalendorinių dienų","Per 10 darbo dienų","Per 15 kalendorinių dienų"],"Per 5 darbo dienas."],
+["L","Kas atsitinka su leidimu, šauliui persikėlus į naują gyvenamąją vietą?",["Leidimas galioja ir nėra keičiamas – daromos žymos policijos IS","Leidimas automatiškai netenka galios","Reikia gauti naują leidimą","Leidimą reikia perregistruoti per 30 dienų"],"Leidimas galioja ir nekeičiamas."],
+["L","Ginklo savininkas pakeitė ginklų laikymo vietą. Kurią policijos įstaigą jis informuoja?",["Naujoje laikymo vietoje esančią teritorinę policijos įstaigą","Leidimą išdavusią įstaigą","Policijos departamentą","Informuoti nereikia"],"Informuojama naujoje ginklo laikymo vietoje esanti teritorinė policijos įstaiga ir pateikiama deklaracija."],
+["L","Ką privalo padaryti ginklo savininkas, kurio leidimo galiojimas pasibaigė?",["Nedelsdamas atiduoti ginklus laikinai saugoti teritorinei policijos įstaigai","Užrakinti ginklus seife iki pratęsimo","Perduoti ginklus šeimos nariui","Parduoti ginklus per 30 dienų"],"Ginklai nedelsiant atiduodami laikinai saugoti policijai."],
+["L","Per kiek laiko policija paima ginklus, jei asmuo, kurio leidimas pasibaigė, neįvykdo įpareigojimo juos pristatyti?",["Per 5 darbo dienas","Per 10 kalendorinių dienų","Per 30 kalendorinių dienų","Per 24 valandas"],"Neįvykdžius įpareigojimo, policija paima ginklus per 5 darbo dienas."],
+["L","Kokiame registre registruojami visi teisėtai Lietuvoje esantys A, B, C kategorijų ginklai?",["Ginklų registre","Gyventojų registre","Turto registre","LŠS ginkluotės apskaitoje"],"Visi A, B, C kat. ginklai registruojami Ginklų registre."],
+["L","Ar privaloma užregistruoti paveldėtą dujinį revolverį, jeigu jis neturi identifikavimo numerio?",["Taip","Ne","Ne – jį privaloma perduoti policijai sunaikinti"],"GŠKĮ 7 str. 2 d.: savininko pasirinkimu – pažymėti numeriu ir užregistruoti arba perdirbti; kitaip sunaikinti.",0],
+["L","Kas sprendžia dėl leidimo pratęsimo kas 5 metai?",["Teritorinės policijos įstaigos vadovas ar jo įgaliotas asmuo","LŠS vadas","Policijos generalinis komisaras","Vidaus reikalų ministras"],"Leidimas pratęsiamas teritorinės policijos įstaigos vadovo ar jo įgalioto asmens sprendimu."],
+
+// ===== I: Įsigijimas, paveldėjimas =====
+["I","Kas turi teisę prekiauti ginklais, priedėliais ir šaudmenimis civilinėje apyvartoje?",["Europos fiziniai ir juridiniai asmenys, turintys licenciją ar rašytinį sutikimą","Bet kuris šaulys, turintis leidimą","LŠS rinktinės","Bet kuris juridinis asmuo"],"Prekiauti gali licenciją ar rašytinį sutikimą turintys Europos fiziniai ir juridiniai asmenys."],
+["I","Ar leidžiami A kategorijos ginklų, priedėlių ir šaudmenų mainai?",["Ne, jie draudžiami","Taip, per licencijuotą prekybininką","Taip, tarp šaulių","Taip, gavus policijos leidimą"],"A kategorijos ginklų, priedėlių, šaudmenų, jų dalių mainai yra draudžiami."],
+["I","Kas išduoda licenciją ar rašytinį sutikimą prekiauti ginklais?",["Policijos įstaiga Vyriausybės nustatyta tvarka","Ekonomikos ministerija","LŠS","Savivaldybė"],"Licenciją išduoda policijos įstaiga."],
+["I","Kada šaulys turi pateikti patikslintą laikymo sąlygų deklaraciją?",["Norėdamas įsigyti daugiau kaip 5 ar daugiau kaip 12 ginklų, jei pirminė deklaracija leido laikyti ne daugiau kaip 5","Kiekvieną kartą įsigydamas naują ginklą","Kartą per metus","Tik keičiant gyvenamąją vietą"],"Patikslinta deklaracija – kai planuojama turėti daugiau kaip 5 ar 12 ginklų."],
+["I","Šaulys turi 9x19 kalibro pistoletą. Kokių šaudmenų jis gali įsigyti?",["Tik 9x19","9x19, 9x18 ir 9x17","Bet kokių 9 mm","9x19 ir 9x18 Makarov"],"Šaudmenis galima įsigyti tik turimų ginklų kalibrams."],
+["I","Šaulys teisėtai turi .357 Magnum revolverį. Kokių šovinių jis dar gali įsigyti?",[".38 Special",".32 SW Long",".22 Short","9x19"],"Išimtis: .357 Magnum ginklo savininkas gali įsigyti ir .38 Special šovinių."],
+["I","Šaulys turi .22 LR ginklą. Kokių šovinių jis dar gali įsigyti pagal išimtį?",[".22 Short",".22 WMR",".223 Rem",".38 Special"],"22 LR ginklui – ir .22 Short."],
+["I","Kokių šovinių pagal išimtį gali įsigyti 1895 m. modelio Nagant revolverio savininkas?",[".32 SW Long",".38 Special","7,62x25","9x18"],"Nagant 1895 – ir .32 SW Long."],
+["I","Kokių šovinių gali įsigyti 7,62x25 ginklo savininkas pagal išimtį?",["7,63x25","7,62x39","9x19","7,62x54R"],"7,62x25 ginklui – ir 7,63x25 (ir atvirkščiai)."],
+["I","Ką reikia pateikti įsigyjant šaudmenis?",["Ginklo leidimą ir atitinkamo ginklo pažymėjimą","Tik asmens tapatybės kortelę","LŠS nario pažymėjimą","Egzamino pažymą"],"Pateikiamas leidimas ir atitinkamo ginklo pažymėjimas."],
+["I","Ar teisėta įsigyti ar realizuoti savos gamybos „reload“ šaudmenis?",["Ne","Taip","Taip, jei realizuojantis asmuo turi licenciją prekiauti","Taip, jei pirkėjas turi leidimą tam kalibrui"],"Šaudmenų gamyba prekybai yra licencijuojama veikla; iš neturinčių teisės prekiauti subjektų įsigyti draudžiama."],
+["I","Iš ko draudžiama įsigyti ginklus, šaudmenis ir priedėlius?",["Iš subjektų, neturinčių teisės verstis jų prekyba ar prekybos tarpininko veikla (išskyrus D kat. šaltuosius)","Iš užsienio prekybininkų","Iš kitų šaulių per licencijuotą prekybininką","Iš LŠS"],"GŠKĮ 11 str. 5 d."],
+["I","Kas atsitinka su ginklu mirus jo savininkui?",["Perduodamas į teritorinę policijos įstaigą laikinai saugoti, kol bus išspręstas paveldėjimo klausimas","Iškart pereina sutuoktiniui","Perduodamas LŠS","Sunaikinamas"],"GŠKĮ 42 str.: perduodamas laikinai saugoti policijai."],
+["I","Per kiek laiko įpėdinis turi kreiptis į policiją dėl leidimo, pardavimo, perdirbimo ar sunaikinimo?",["Per 6 mėnesius nuo dienos, kai sueina 3 mėnesiai nuo palikimo atsiradimo","Per 3 mėnesius nuo savininko mirties","Per 30 dienų nuo paveldėjimo liudijimo gavimo","Per 1 metus nuo mirties"],"Per 6 mėn. nuo tos dienos, kai sueina 3 mėn. nuo palikimo atsiradimo."],
+["I","Kiek laiko galioja leidimas ginklą parduoti?",["Ne ilgiau kaip 30 kalendorinių dienų","6 mėnesius","10 kalendorinių dienų","1 metus"],"Leidimas ginklą parduoti galioja ne ilgiau kaip 30 kalendorinių dienų."],
+["I","Per kiek laiko po ginklo atidavimo realizuoti įpėdinis turi pateikti policijai pažymą apie perdavimą realizuoti?",["Per 30 kalendorinių dienų","Per 10 kalendorinių dienų","Per 5 darbo dienas","Per 6 mėnesius"],"Per 30 kalendorinių dienų pateikiama pažyma."],
+["I","Per kiek laiko nuo paveldėto ginklo realizavimo prekybininkas praneša įpėdiniui ir išmoka pinigus?",["Per 10 kalendorinių dienų","Per 30 kalendorinių dienų","Per 5 darbo dienas","Per 3 mėnesius"],"Per 10 kalendorinių dienų."],
+["I","Ką daro policija, jei įpėdinis be pateisinamų priežasčių nesikreipia nustatytu laiku?",["Perduoda ginklą Vyriausybės įgaliotai institucijai sunaikinti","Parduoda aukcione","Perduoda LŠS","Laiko neribotą laiką"],"Policija ginklą perduoda Vyriausybės įgaliotai institucijai sunaikinti."],
+["I","Kam gali būti dovanojami B ir C kategorijų ginklai?",["Asmenims, turintiems teisę įsigyti ir turėti atitinkamos rūšies ginklą","Bet kuriam pilnamečiui","Tik šeimos nariams","Tik LŠS nariams"],"Dovanoti galima tik teisę įsigyti atitinkamos rūšies ginklą turintiems asmenims."],
+["I","Kuris pareigūnas NETURI teisės apdovanoti asmenų B, C kategorijų trumpaisiais šaunamaisiais ginklais?",["Lietuvos šaulių sąjungos vadas","Respublikos Prezidentas","Krašto apsaugos ministras","Lietuvos kariuomenės vadas"],"Teisę turi: Prezidentas, Seimo Pirmininkas, Ministras Pirmininkas, KAM, LK vadas, VRM."],
+["I","Ar LŠS vadas turi teisę apdovanoti šaulius B, C kategorijų trumpaisiais šaunamaisiais ginklais?",["Taip","Ne","Taip, jei šaulys turi galiojantį leidimą"],"GŠKĮ 42 str.: tokia teisė nesuteikta LŠS vadui.",1],
+["I","Kuris iš išvardytų turi teisę apdovanoti ginklais?",["Vidaus reikalų ministras","Policijos generalinis komisaras","LŠS rinktinės vadas","Savivaldybės meras"],"VRM yra tarp asmenų, turinčių teisę apdovanoti ginklais."],
+["I","Kas nurodoma ant apdovanojimui skirto ginklo?",["Apdovanotojo vardas, pavardė, nuopelnai, apdovanojusio pareigos ir data","Tik apdovanotojo vardas","Tik apdovanojimo data","Nieko – ginklas nežymimas"],"Ginklai pažymimi nurodant vardą, pavardę, nuopelnus, apdovanojusio asmens pareigas ir datą."],
+["I","Ar užsienio valstybių vadovai gali apdovanoti nuolatinius LR gyventojus ginklais?",["Taip","Ne","Tik šaltaisiais ginklais"],"Apdovanoti gali ir užsienio valstybių, vyriausybių vadovai, kiti oficialūs asmenys.",0],
+["I","Kaip asmuo gali parduoti jam teisėtai priklausantį B kategorijos ginklą?",["Tik per subjektą, turintį teisę prekiauti atitinkamos kategorijos ginklais","Tiesiogiai kitam leidimą turinčiam asmeniui","Per skelbimų portalą","Per LŠS"],"A, B, C kategorijos ginklai parduodami tik per subjektą, turintį teisę prekiauti."],
+["I","Kas yra GŠKĮ 3 str. 2, 6–9 p. ginklai paveldėjimo ir dovanojimo požiūriu?",["Jie gali būti dovanojami ir paveldimi","Jie negali būti nei dovanojami, nei paveldimi","Jie tik paveldimi","Jie tik dovanojami"],"GŠKĮ 3 str. 2, 6–9 p. ginklai, B, C, D kat. ginklai ir šaudmenys dovanojami ir paveldimi."],
+["I","Kas gali gauti leidimą ginklą parduoti, kai įpėdinis nesikreipia dėl leidimo laikyti?",["Įpėdinis arba jo įgaliotas asmuo","Tik notaras","Tik policija","Tik LŠS vadas"],"Leidimas ginklą parduoti išduodamas ir įpėdinio įgaliotam asmeniui."],
+["I","Kokiems ginklams prekiautojams draudžiama prekiauti be licencijos, išskyrus vieną išimtį?",["Visiems, išskyrus D kategorijos šaltuosius ginklus","Visiems, išskyrus C kategorijos","Visiems, išskyrus pneumatinius","Licencija reikalinga tik A kategorijai"],"Licencija nereikalinga D kategorijos šaltiesiems ginklams."],
+
+// ===== S: Laikymas, gabenimas, taisymas =====
+["S","Kas yra ginklo laikymas pagal GŠKĮ?",["Ginklo valdymas (faktinis turėjimas) būste, patalpose ar kitose vietose su aiškiai apibrėžtomis ribomis","Ginklo nešiojimas su savimi","Ginklo transportavimas automobiliu","Ginklo saugojimas tik seife"],"Laikymas – faktinis turėjimas savo žinioje vietose, turinčiose aiškiai apibrėžtas ribas."],
+["S","Kaip turi būti gabenamas ginklas?",["Neužtaisytas, dėkle, dėtuvė išimta, šaudmenys išimti iš dėtuvės, būgnelio ir vamzdžio","Neužtaisytas, bet dėtuvė gali būti įdėta","Užtaisytas, bet su įjungtu saugikliu","Dėkle, šovinys gali būti vamzdyje"],"Gabenimas – sąlygomis, užtikrinančiomis, kad ginklo nebus galima panaudoti nedelsiant."],
+["S","Kaip gabenami šaulio tarnybai skirti šaudmenys?",["Įdėti į dėklą ar kitą tinkamą daiktą, šaudmenų negali būti ginkle ar dėtuvėje","Sudėti į dėtuvę, dėtuvė išimta iš ginklo","Sudėti į dėtuvę, prijungtą prie ginklo","Taip, kad ginklą būtų galima panaudoti nedelsiant"],"GŠKĮ 2 str. 12 d.: šaudmenys išimti iš dėtuvės, būgnelio ir vamzdžio."],
+["S","Kiek laiko leidimas įsigyti ginklus leidžia laikyti įsigytus ginklus?",["Ne ilgiau kaip 10 kalendorinių dienų nuo įsigijimo","30 kalendorinių dienų","5 darbo dienas","Iki leidimo galiojimo pabaigos"],"Leidimas įsigyti suteikia teisę gabenti iki valstybės sienos ir laikyti ne ilgiau kaip 10 kalendorinių dienų."],
+["S","Ar leidimas laikyti ginklą suteikia teisę nešiotis ginklą ir šaudmenis?",["Ne","Taip","Taip, bet tik savigynai"],"Leidimas laikyti ginklą nesuteikia teisės nešiotis ginklą ir šaudmenis.",0],
+["S","Ką privalo padaryti asmuo, radęs ginklą ar šaudmenų?",["Nedelsiant pranešti policijai, ginklo negabenti","Nugabenti į artimiausią policijos įstaigą","Pasiimti ir saugoti iki policijos atvykimo","Perduoti LŠS rinktinei"],"Draudžiama rastus ginklus gabenti – policija juos paima radimo vietoje."],
+["S","Ar D kategorijos ginklams laikyti ir nešioti reikia leidimo?",["Ne","Taip, visiems","Taip, tik elektros šoko įtaisams"],"D kategorijos ginklai laikomi ir nešiojami be leidimų (nešioti galima tik dujų įrenginius ir elektros šoko įtaisus).",0],
+["S","Kam netaikomas draudimas nešiotis ginklus viešosiose vietose (įstatymų nustatytais atvejais)?",["Asmenims, vykdantiems profesinę veiklą, susijusią su asmens ir turto sauga","Šauliams","Medžiotojams","Visiems leidimą turintiems"],"Netaikoma vykdantiems profesinę veiklą, susijusią su asmens ir turto sauga."],
+["S","Ar ginklų savininkai savo reikmėms gali gaminti šaudmenis be licencijos?",["Taip","Ne","Tik turėdami LŠS leidimą"],"Ginklų savininkai savo reikmėms šaudmenis gali gaminti patys be licencijos.",0],
+["S","Kiek parako gali įsigyti ir laikyti asmenys, teisėtai turintys B kategorijos graižtvinius ginklus?",["Iki 3 kg","Iki 1 kg","Iki 5 kg","Neribotai"],"Leidžiama įsigyti ir laikyti kapsulių ir iki 3 kg parako."],
+["S","Kas Lietuvoje gali taisyti ir perdirbti ginklus?",["Fizinis ar juridinis asmuo, turintis licenciją taisyti ir perdirbti ginklus","Bet kuris ginklo savininkas","LŠS ginklininkai","Bet kuris šaulys, išlaikęs egzaminą"],"Taisyti ir perdirbti gali tik licenciją turintys asmenys."],
+["S","Ar savininkas gali savarankiškai taisyti ginklo buožę?",["Taip","Ne","Tik turėdamas licenciją taisyti ir perdirbti ginklus"],"Buožė nėra šaunamojo ginklo dalis pagal GŠKĮ 2 str. 51 d.",0],
+["S","Kuri iš šių NĖRA pagrindinė šaunamojo ginklo dalis?",["Buožė","Vamzdis","Spyna (užraktas)","Būgnelis"],"Pagrindinės dalys: vamzdis, būgnelis, spyna, spynos rėmas, šovinio lizdas, įdėklas."],
+["S","Kuri iš šių yra pagrindinė šaunamojo ginklo dalis?",["Spynos (užrakto) rėmas","Taikiklis","Rankena","Diržas"],"Spynos rėmas priskiriamas pagrindinėms šaunamojo ginklo dalims."],
+["S","Ar ginklo savininkui reikia leidimo pateikti ginklą taisyti?",["Ne","Taip","Taip, jei taisomas vamzdis"],"Ginklui taisyti leidimas nereikalingas (leidimas reikalingas perdirbti).",0],
+["S","Kas išduoda leidimą perdirbti ginklą?",["Policijos įstaiga, išdavusi leidimą laikyti ar nešiotis ginklus","LŠS vadas","Licencijuota ginklų dirbtuvė","Vidaus reikalų ministerija"],"Leidimą perdirbti išduoda leidimą išdavusi policijos įstaiga."],
+["S","Kada leidimas perdirbti ginklą neišduodamas?",["Jei perdirbimas pakeistų ginklo pirminius rūšies požymius","Jei ginklas senesnis nei 20 metų","Jei savininkas nėra šaulys","Leidimas išduodamas visada"],"Neišduodamas, jei pakeistų pirminius rūšies požymius."],
+["S","Kurie ginklai turi būti išbandomi po remonto?",["Perdirbti ginklai ir ginklai, į kuriuos įstatytas neišbandytas (nepaženklintas) vamzdis","Visi ginklai po bet kokio remonto","Tik ginklai su pakeistu nuleistuku","Jokie"],"Perdirbti ir su neišbandytu vamzdžiu ginklai turi būti išbandomi."],
+["S","Kas daroma su netinkamais naudoti ginklais, kurių neįmanoma ar netikslinga taisyti?",["Sunaikinami arba perdirbami į visiškai netinkamus naudoti","Parduodami kolekcininkams","Laikomi neribotai","Grąžinami gamintojui"],"Netinkami naudoti ginklai sunaikinami arba perdirbami į visiškai netinkamus naudoti."],
+["S","Kam asmuo perduoda norimus sunaikinti savo ginklus ir šaudmenis?",["Teritorinei policijos įstaigai","Tiesiogiai Vyriausybės įgaliotai institucijai","LŠS","Licencijuotai dirbtuvei"],"Perduodama teritorinei policijos įstaigai."],
+["S","Kaip dažnai policija perduoda sunaikinti atiduotus ginklus Vyriausybės įgaliotai institucijai?",["Ne rečiau kaip kas 6 mėnesius","Kas mėnesį","Kartą per metus","Kas 3 mėnesius"],"Ne rečiau kaip kas 6 mėnesius."],
+["S","Kaip turi būti sunaikinami sudrėkę savos gamybos „reload“ šaudmenys?",["Perduoti teritorinei policijos įstaigai","Patikrinti juos iššaunant","Išardyti savarankiškai","Jų naikinti nebūtina"],"GŠKĮ 43 str. 3 d.: norimus sunaikinti šaudmenis asmenys perduoda policijai."],
+["S","Kokiu būdu turi būti naikinami ginklai ir šaudmenys?",["Kad taptų visiškai netinkami naudoti ir nekiltų pavojaus žmonėms bei aplinkai","Bet kokiu savininko pasirinktu būdu","Užkasant","Supjaustant vamzdį į dvi dalis"],"Turi tapti visiškai netinkami naudoti, nekeliant pavojaus sveikatai ir aplinkai."],
+["S","Kokiose vietose gali būti sudaromos sąlygos ginklus palikti laikinai saugoti?",["Valstybės institucijose, stadionuose, restoranuose, baruose, teatruose","Tik policijos komisariatuose","Tik šaudyklose","Tik LŠS būstinėse"],"Valstybės institucijose ir visuomeninės paskirties vietose."],
+
+// ===== N: Naudojimas, LŠS =====
+["N","Kuriam tikslui GŠKĮ NENUMATO teisės naudoti ginklą?",["Skolų išieškojimui","Medžioklei","Kolekcijoms sudaryti","Moksliniam tyrimui"],"GŠKĮ 34 str.: medžioklė, sportas, savigyna, profesinė veikla, kolekcijos, mokymas, mokslas, šaulio tarnyba, kiti teisėti tikslai."],
+["N","Kam gali būti naudojamas tik šaulio tarnybai skirtas ginklas (jei leidime nenurodytos kitos paskirtys)?",["Savigynai ir šaulio tarnybai","Tik šaulio tarnybai","Medžioklei ir sportui","Bet kokiai paskirčiai"],"Šaulio tarnybai skirtas ginklas gali būti naudojamas savigynai ir šaulio tarnybai."],
+["N","Ar ginklą gintis galima naudoti, jei asmuo galėjo išvengti kėsinimosi ar kreiptis pagalbos?",["Taip – nepaisant to, ar galėjo išvengti ar kreiptis pagalbos","Ne – pirmiausia privaloma bėgti","Ne – pirmiausia privaloma skambinti 112","Tik jei nėra kur pasitraukti"],"Teisė gintis įgyvendinama nepaisant to, ar galėjo išvengti kėsinimosi arba kreiptis pagalbos."],
+["N","Kada galima NEĮSPĖTI asmens prieš panaudojant ginklą?",["Kai įspėti neįmanoma arba delsimas kelia tiesioginį pavojų gyvybei ir sveikatai","Kai asmuo yra žinomas nusikaltėlis","Kai yra tamsu","Kai ginkluotas šaulys yra uniformuotas"],"Įspėti būtina, išskyrus kai neįmanoma arba delsimas kelia tiesioginį pavojų."],
+["N","Kokiais būdais gali būti atliekamas įspėjimas prieš panaudojant ginklą?",["Balsu, veiksmu ar šūviu","Tik balsu","Tik įspėjamuoju šūviu","Tik raštu"],"Įspėjimas – balsu, veiksmu ar šūviu (veiksmu rekomenduojama nesikliauti)."],
+["N","Kuriuo įspėjimo būdu mokymo medžiagoje rekomenduojama nesikliauti?",["Veiksmu","Žodžiu","Įspėjamuoju šūviu","Visais galima vienodai pasikliauti"],"Veiksmai gali būti suprantami ir vertinami skirtingai."],
+["N","Kada ginklą galima panaudoti prieš gyvūną?",["Kai gyvūnas kelia pavojų gyvybei ar sveikatai","Kai gyvūnas kelia grėsmę turtui","Kai gyvūnas įbėga į privačią valdą","Bet kada, jei gyvūnas benamis"],"Gyvybei ar sveikatai, bet ne turtui."],
+["N","Šuo užpuolė jūsų avis. Ar galite panaudoti ginklą savigynos pagrindu?",["Ne – tai grėsmė turtui, o ne gyvybei ar sveikatai","Taip, gyvūnas – pavojingas","Taip, jei šuo be antsnukio","Taip, jei įspėjote šeimininką"],"Teisine prasme gyvūnas – turtas, todėl tai grėsmė turtui."],
+["N","Prieš kuriuos asmenis draudžiama naudoti ginklą (išskyrus kai jie priešinasi pavojingu gyvybei būdu ar užpuola)?",["Akivaizdžiai nėščias moteris, akivaizdžiai neįgalius, nepilnamečius","Užsieniečius","Vyresnius kaip 65 metų asmenis","Neblaivius asmenis"],"Draudžiama prieš akivaizdžiai nėščias moteris, neįgalius, nepilnamečius (jei amžius žinomas ar išvaizda atitinka)."],
+["N","Kur draudžiama naudoti ginklą, jei gali nukentėti pašaliniai asmenys?",["Žmonių susibūrimo vietose","Savo kieme","Miške","Garaže"],"Draudžiama žmonių susibūrimo vietose, jeigu gali nukentėti pašaliniai."],
+["N","Ką ir kada privalo informuoti ginklo savininkas, jei panaudojus ginklą žuvo žmogus ar padaryta žala?",["Nedelsiant teritorinę policijos įstaigą ar prokuratūrą","Per 3 dienas LŠS vadą","Per 24 val. savivaldybę","Informuoti nereikia, jei veikė teisėtai"],"Nedelsiant pranešama teritorinei policijos įstaigai ar prokuratūrai."],
+["N","Koks pirmas veiksmas po ginklo panaudojimo, kai yra nukentėjusiųjų?",["Suteikti pirmąją medicinos pagalbą","Užrašyti liudininkų duomenis","Nufotografuoti įvykio vietą","Paslėpti ginklą"],"Eiliškumas: pirmoji pagalba → pranešimas policijai ar prokuratūrai → įvykio vietos apsauga → liudininkų duomenys."],
+["N","Kokia veiksmų seka rekomenduojama panaudojus ginklą?",["Pirmoji pagalba → pranešti policijai/prokuratūrai → apsaugoti įvykio vietą → užrašyti liudininkus","Pranešti → užrašyti liudininkus → pirmoji pagalba → išvykti","Apsaugoti vietą → pirmoji pagalba → liudininkai → pranešti po paros","Užrašyti liudininkus → išvalyti vietą → pranešti"],"Būtent tokia seka nurodyta mokymo medžiagoje."],
+["N","Ar medžioklei gali būti naudojami teisėtai turimi A, B kategorijų trumpieji šaunamieji ginklai?",["Taip, kiek tai leidžia medžioklę reglamentuojantys teisės aktai","Ne, niekada","Taip, be apribojimų","Tik A kategorijos"],"GŠKĮ 34 str.: tiek, kiek leidžia medžioklės teisės aktai."],
+["N","Kokiais teisės aktais vadovaujamasi naudojant ginklus atliekant nustatytą šaulio tarnybą?",["Karinės jėgos naudojimo statutu ir LŠS įstatymu","Tik Policijos įstatymu","Medžioklės taisyklėmis","Tik GŠKĮ"],"Mokymuose – LŠS vado tvarka, tarnyboje – Karinės jėgos naudojimo statutas ir LŠS įstatymas."],
+["N","Kas gali šaudyti iš senovinių ginklų kopijų masinių renginių metu?",["Tik renginio organizatoriai, suderinę su savivaldybės administracija ir nenaudodami sviedinių","Bet kuris dalyvis","Tik policija","Šauliai be jokių suderinimų"],"Su savivaldybės administracija suderinus ir nenaudojant sviedinių."],
+["N","Ar galima užtaisyti senovinį ginklą ir iš jo šaudyti?",["Ne","Taip, renginių metu","Taip, šaudykloje"],"GŠKĮ 31 str. 2 d. 4 p.: draudžiama užtaisyti senovinius ginklus ir iš jų šaudyti.",0],
+["N","Kuris atvejis NENUMATYTAS KJNS 8 str. kaip pagrindas kariams naudoti individualiuosius ginklus?",["Asmuo įžeidinėja karį žodžiu","Savigyna","Prieš pavojų keliančius gyvūnus","Prieš bepiločius orlaivius, skraidančius pažeidžiant tvarką"],"KJNS 8 str. išvardija savigyną, turto ir objektų gynimą, sulaikymą, gyvūnus, transporto priemones, bepiločius orlaivius."],
+["N","Prieš ką pagal KJNS draudžiama naudoti individualiuosius ginklus (be ginklo išimčių)?",["Prieš asmenis, turinčius su savimi mažamečių vaikų","Prieš ginkluotus asmenis","Prieš transporto priemones","Prieš bepiločius orlaivius"],"KJNS 8 str. 3 d.: draudžiama prieš mažamečius, asmenis su mažamečiais vaikais, nėščiąsias, neįgaliuosius, nepilnamečius."],
+["N","Ar pagal KJNS kariai gali naudoti ginklus prieš bepiločius orlaivius?",["Taip, jei jų skrydžiai vykdomi nesilaikant nustatytų sąlygų ar tvarkos","Ne","Tik karo metu"],"KJNS 8 str. 1 d. 8 p.",0],
+["N","Kokiu pagrindu LŠS teikia pagalbą policijai užtikrinant viešąją tvarką?",["Gavus policijos generalinio komisaro ar jo įgalioto pareigūno prašymą","LŠS vado iniciatyva","Bet kurio policijos pareigūno žodiniu prašymu","Savivaldybės mero sprendimu"],"LŠS įstatymo 17 str. 1 d."],
+["N","Kieno sprendimu šauliai siunčiami teikti pagalbą policijai?",["LŠS vado ar jo įgalioto rinktinės vado","Policijos generalinio komisaro","Vidaus reikalų ministro","Kuopos vado"],"Šauliai siunčiami LŠS vado ar jo įgalioto rinktinės vado sprendimu."],
+["N","Kas nustato, kokias specialiąsias priemones ir ginklus gali turėti policijai padedantys šauliai?",["Už viešąją tvarką atsakingos policijos įstaigos vadovas ar įgaliotas pareigūnas, arba priemonei vadovaujantis pareigūnas","LŠS vadas","Patys šauliai","Savivaldybė"],"LŠS įstatymo 17 str. 2 d."],
+["N","Kas vadovauja šaulių padaliniams, padedantiems Valstybės sienos apsaugos tarnybai?",["VSAT vadas ar jo įgaliotas pareigūnas","LŠS vadas","Kariuomenės vadas","Rinktinės vadas"],"LŠS įstatymo 18 str. 2 d."],
+["N","Kiek prievartos, specialiųjų priemonių ir ginklų gali naudoti šauliai, teikdami pagalbą policijai, VSAT ar kariuomenei?",["Tik tiek, kiek būtina pagalbos tikslams pasiekti","Tiek, kiek leidžia pareigūnai","Neribotai, jei yra įsakymas","Tik specialiąsias priemones, ginklų – niekada"],"LŠS įstatymo 15, 17, 18 str."],
+["N","Ką šauliai gali daryti viešosios tvarkos pažeidimų atveju (LŠS įst. 17 str. 4 d.)?",["Įspėti pažeidėjus ir privalo pranešti policijos pareigūnams","Sulaikyti ir apžiūrėti pažeidėjus","Skirti baudas","Tikrinti pažeidėjų dokumentus"],"Šauliai gali įspėti ir privalo pranešti policijai."],
+["N","Kaip šauliai gali padėti policijai atvejais, nenumatytais LŠS įstatymo 17 str. 1 d.?",["Įstatymų nustatyta tvarka tapę policijos rėmėjais","Savo iniciatyva","Tik su LŠS vado leidimu","Negali"],"LŠS įstatymo 17 str. 3 d."],
+["N","Kokiu pagrindu šaulys gali naudoti ginklą teikdamas pagalbą civilinės saugos ar švietimo įstaigoms?",["Tik GŠKĮ nustatytais pagrindais (savigyna, mokymas)","Karinės jėgos naudojimo statuto pagrindu","Policijos įstatymo pagrindu","LŠS įstatymas tai leidžia be apribojimų"],"LŠS įstatymas tokiais atvejais teisės panaudoti ginklą nenumato."],
+["N","Kokiais pagrindais šauliai, veikdami kartu su policijos pareigūnais, naudoja ginklus?",["Policijos įstatymo 27 ir 28 straipsniuose nustatyta tvarka","Karinės jėgos naudojimo statuto 8 str.","Valstybės sienos ir jos apsaugos įstatymo 29 str.","Tik GŠKĮ 34 str."],"LŠS įstatymo 41 str. 2 d."],
+["N","Kokiais pagrindais šauliai, veikdami kartu su VSAT pareigūnais, naudoja ginklus?",["Valstybės sienos ir jos apsaugos įstatymo 28 ir 29 str.","Policijos įstatymo 28 str.","KJNS 8 str.","Medžioklės taisyklėmis"],"LŠS įstatymo 41 str. 3 d."],
+["N","Kokiais pagrindais šauliai naudoja ginklus atlikdami tarnybą padedant kariuomenei?",["Karinės jėgos naudojimo statuto 8 str.","Policijos įstatymo 28 str.","VSAT įstatymo 29 str.","Tik savigynos pagrindu"],"LŠS įstatymo 41 str. 1 d."],
+["N","Pagal Policijos įstatymo 28 str., šaunamieji ginklai gali būti naudojami:",["Tik išimtiniais atvejais, kai neišvengiamai būtina ir prievarta buvo neveiksminga arba kyla neišvengiamas pavojus gyvybei","Visada, kai asmuo nepaklūsta","Kai asmuo bėga nuo pareigūno","Kai asmuo įžeidinėja pareigūną"],"Policijos įstatymo 28 str. 1 d."],
+["N","Per kiek laiko pagal Valstybės sienos ir jos apsaugos įstatymą pranešama prokurorui, jei panaudojus ginklą žuvo ar buvo sužalotas žmogus?",["Tuoj pat, ne vėliau kaip per 24 valandas","Per 3 dienas","Per 48 valandas","Per 7 dienas"],"VSAT įstatymo 29 str. 8 d."],
+["N","Kas turi teisę naudoti prievartą, šaunamuosius ginklus ir specialiąsias priemones (išskyrus savigyną)?",["Tik pilnamečiai šauliai, išlaikę ginklų ir specialiųjų priemonių naudojimo taisyklių egzaminus","Visi šauliai","Jaunieji šauliai nuo 16 m.","Tik šaulių vadai"],"LŠS įstatymo 41 str. 4 d."],
+["N","Kaip šaulys atsako už neteisėtą ginklo panaudojimą?",["Bendra LR teisės aktų nustatyta tvarka","Tik drausmine tvarka LŠS","Neatsako, jei vykdė įsakymą","Tik administracine tvarka"],"LŠS įstatymo 41 str. 5 d."],
+["N","Kieno operaciniam vadovavimui priskiriami LŠS padaliniai, teikiantys pagalbą kariuomenei?",["Karinių vienetų, teikiančių pagalbą institucijoms, vadų","LŠS vado","Policijos komisarų","Savivaldybių administracijų direktorių"],"LŠS padaliniai priskiriami karinių vienetų vadų operaciniam vadovavimui."],
+["N","Kaip šauliai, nedėvintys uniformos, vykdami į pratybas, gali nešioti trumpuosius ginklus?",["Taip, kad kiti asmenys jų nematytų","Matomoje vietoje dėkle","Tik kuprinėje, išardytus","Negali nešioti"],"LŠS vado 2016-11-28 įsakymas Nr. 369."],
+["N","Kas mokymų ir pratybų vietoje gali nešioti ir užtaisyti šaulio tarnybai skirtus ginklus?",["Tik uniformuoti šauliai ir tik pratybų vadovo nustatytais atvejais","Bet kuris šaulys su leidimu","Visi pratybų dalyviai","Tik instruktoriai"],"Tik uniformuoti šauliai pratybų vadovo nustatyta tvarka."],
+["N","Kokie šaudmenys gali būti naudojami taktikos mokymuose ar pratybose?",["Tik signaliniai, mokomieji ar imitaciniai","Bet kokie","Tik koviniai","Imitaciniai ir koviniai"],"Taktikos mokymuose naudojami tik signaliniai, mokomieji ar imitaciniai šaudmenys."],
+["N","Kam netaikomas draudimas taktikos pratybose turėti kito tipo (pvz., kovinius) šaudmenis?",["Pratybų vadovui ir asmenims, atsakingiems už saugumą","Visiems uniformuotiems šauliams","Būrio vadams","Medikams"],"Draudimas netaikomas pratybų vadovui ir atsakingiems už saugumą."],
+["N","Ar taktikos pratybose galima naudoti šaulio tarnybai skirtus ginklus kartu su dažasvydžio ar šratasvydžio įtaisais?",["Ne, jei įsakyme nenumatyta kitaip","Taip, visada","Taip, jei ginklai neužtaisyti"],"Draudžiama, jei įsakyme dėl pratybų organizavimo nenumatyta kitaip.",0],
+["N","Kokius dokumentus privalo turėti taktikos pratybose dalyvaujantis šaulys su savo ginklu?",["Šaulio pažymėjimą, leidimą ginklui ir ginklo pažymėjimą","Tik asmens tapatybės kortelę","Egzamino pažymą ir sveikatos pažymą","Ginklo pirkimo čekį"],"Taip pat privaloma dėvėti šaulio uniformą."],
+["N","Kam pratybų metu šaulys gali laikinai perduoti savo ginklą?",["Tik pratybų vadovui ar tiesioginiam vadui","Bet kuriam šauliui su leidimu","Kitam būrio nariui","Niekam"],"Laikinai perduoti ginklą – tik pratybų vadovui ar tiesioginiam vadui."],
+["N","Kokie šaudmenys gali būti naudojami ginklo valdymo mokymuose?",["Tik mokomieji","Imitaciniai","Koviniai","Signaliniai"],"Ginklo valdymo mokymuose – tik mokomieji šaudmenys; draudžiama turėti kitų to kalibro šaudmenų."],
+["N","Kur vykdomi praktinio šaudymo mokymai ir pratybos?",["Tiruose ar šaudyklose","Bet kurioje miško vietoje","Šaulių namuose","Karinių dalinių teritorijoje bet kur"],"Praktinio šaudymo mokymai vykdomi tiruose ar šaudyklose."],
+["N","Kuo skiriasi tiras nuo šaudyklos?",["Tiras – statinys, specialiai įrengtas saugiai šaudyti; šaudykla – vietovė, pritaikyta saugiai šaudyti","Tiras – lauko vietovė; šaudykla – pastatas","Tiras skirtas tik pneumatiniams ginklams","Jokio skirtumo"],"Šaudykla – vietovė; tiras – statinys."],
+["N","Kam fizinis asmuo gali perleisti naudoti savo B kategorijos ginklą (GŠKĮ 16 str. 1 d.)?",["Tik kartu gyvenančiam šeimos nariui, turinčiam leidimą tos kategorijos ginklui","Bet kuriam draugui su leidimu","Bet kuriam šauliui","Niekam"],"Ginklas turi būti laikomas perleidusio asmens būste."],
+["N","Kada fizinis asmuo, jam dalyvaujant, gali laikinai perleisti ginklą kitam teisę turinčiam asmeniui?",["Medžioklės, sporto renginių ir mokymų metu","Bet kada","Tik varžybų metu","Tik savigynos situacijoje"],"GŠKĮ 16 str. 2 d."],
+["N","Kas privaloma, kai tire asmeniui laikinai perduodami ginklai šaudymo varžybų, pratybų, mokymų metu?",["Priežiūra trenerio ar kito už saugų šaudymą atsakingo asmens","Notaro patvirtinta sutartis","Policijos leidimas kiekvienam kartui","Nieko"],"GŠKĮ 16 str. 4 d."],
+["N","Kas dalyvauja LŠS ar jos padalinių taktikos mokymuose su šaulio tarnybai skirtais ginklais?",["Tik LŠS vado, jo įgalioto asmens ar rinktinės vado įsakyme nurodyti šauliai","Bet kuris šaulys su leidimu","Visi rinktinės nariai","Bet kas, turintis uniformą"],"Ginklus gali naudoti tik įsakyme nurodyti šauliai."],
+["N","Kokie veiksmai DRAUDŽIAMI šauliams, vykdantiems tarnybą atskirai nuo pareigūnų?",["Tikrinti asmenų dokumentus, apžiūrėti asmenis ir transporto priemones","Įspėti viešosios tvarkos pažeidėjus","Pranešti policijai apie pažeidimus","Gintis nuo užpuolimo"],"Šiuos veiksmus gali atlikti tik įgaliojimus turintys pareigūnai (šaulys gali padėti, kai pareigūnas šalia)."],
+
+// ===== G: Būtinoji gintis =====
+["G","Kada pagal BK 28 str. būtinosios ginties ribos peržengiamos?",["Kai tiesiogine tyčia nužudoma ar sunkiai sutrikdoma sveikata, jei gynyba aiškiai neatitiko kėsinimosi pobūdžio ir pavojingumo","Kai užpuolikui padaromas bet koks sužalojimas","Kai gynėsi ginklu nuo neginkluoto","Kai nebuvo įspėta"],"BK 28 str."],
+["G","Kas NELAIKOMA būtinosios ginties ribų peržengimu?",["Veika dėl didelio sumišimo ar išgąsčio, kurį sukėlė kėsinimasis, arba ginantis nuo įsibrovimo į būstą","Šūvis į bėgantį užpuoliką","Kerštas po užpuolimo","Gynyba nuo jau pasibaigusio kėsinimosi"],"BK 28 str. ir ANK 13 str."],
+["G","Kokias tris sąlygas turi atitikti kėsinimasis, kad būtinoji gintis būtų teisėta?",["Pavojingas, realus ir akivaizdus","Smurtinis, ginkluotas ir netikėtas","Pavojingas, baigtas ir įrodytas","Neteisėtas, tyčinis ir pakartotinis"],"Kėsinimasis turi būti pavojingas, realus ir akivaizdus."],
+["G","Ką reiškia, kad kėsinimasis turi būti realus?",["Egzistuoja objektyvioje tikrovėje, o ne besiginančiojo vaizduotėje","Užpuolikas turi realų ginklą","Kėsinimasis jau padarė žalą","Yra liudininkų"],"Realus kėsinimasis egzistuoja objektyvioje tikrovėje."],
+["G","Ką reiškia, kad kėsinimasis turi būti akivaizdus?",["Jis egzistuoja gynybos metu – prasidėjęs arba kelia realią grėsmę ir dar nepasibaigęs","Jį mato liudininkai","Užpuolikas yra atpažįstamas","Jis užfiksuotas vaizdo kameromis"],"Akivaizdumas – egzistavimas laike; baigtas užpuolimas nelaikomas akivaizdžiu."],
+["G","Ar baigtas ir daugiau pavojaus nebekeliantis užpuolimas laikomas akivaizdžiu?",["Ne","Taip","Taip, jei praėjo mažiau nei 5 minutės"],"Pavojingo kėsinimosi pabaiga reiškia, kad nebėra nuo ko gintis.",0],
+["G","Kam gali būti padaroma žala būtinosios ginties metu?",["Tik besikėsinančiajam","Besikėsinančiajam ir jo bendrininkams, net nedalyvaujantiems","Bet kam, jei ginamasi","Pašaliniams, jei neišvengiama"],"Žala padaroma tik besikėsinančiajam."],
+["G","Kuri situacija rodo, kad kėsinimasis dar realiai egzistuoja?",["Kėsinimasis tik sustabdytas siekiant pagerinti jo sąlygas","Užpuolikas pabėgo ir dingo iš akių","Užpuolikas pasidavė ir guli ant žemės","Praėjo para nuo užpuolimo"],"Teorija: kėsinimasis, sustabdytas siekiant pagerinti sąlygas, dar egzistuoja."],
+["G","Ar besiginančiajam atitekęs užpuoliko ginklas savaime reiškia kėsinimosi pabaigą?",["Ne, tai besąlygiškai nereiškia pabaigos","Taip, visada","Taip, jei ginklas šaunamasis"],"Ginklai, atitekę besiginančiajam, nebūtinai reiškia kėsinimosi pabaigą.",0],
+["G","Ką saugo teisė į būtinąją gintį pagal BK 28 str.?",["Save, kitą asmenį, nuosavybę, būsto neliečiamybę, kitas teises, visuomenės ar valstybės interesus","Tik savo gyvybę","Tik gyvybę ir sveikatą","Tik būsto neliečiamybę"],"BK 28 str."],
+["G","Kokios dvi sąlygos būtinos būtinajam reikalingumui?",["Pavojus negalėjo būti pašalintas kitomis priemonėmis ir padaryta žala mažesnė už tą, kurios siekta išvengti","Pavojus buvo akivaizdus ir žala lygiavertė","Asmuo įspėjo ir neturėjo kur pasitraukti","Buvo liudininkų ir pranešta policijai"],"BK 31 str., ANK 16 str."],
+["G","Kada savo veiksmais pavojingą situaciją sudaręs asmuo gali remtis būtinuoju reikalingumu?",["Tik jei situacija sudaryta dėl neatsargumo","Visada","Niekada","Tik jei situacija sudaryta tyčia"],"BK 31 str. 2 d."],
+["G","Ar asmuo, kuris dėl profesijos privalo veikti didesnio pavojaus sąlygomis, gali pateisinti pareigos nevykdymą būtinuoju reikalingumu?",["Ne","Taip","Taip, jei pavojus gyvybei"],"BK 31 str. 3 d.",0],
+["G","Ką asmuo gali padaryti sulaikydamas nusikalstamą veiką padariusį asmenį (BK 29 str.), jei kitaip sulaikyti neįmanoma?",["Turtinę žalą, nesunkų sveikatos sutrikdymą ar sunkų dėl neatsargumo","Bet kokią žalą","Tik turtinę žalą","Sunkų sveikatos sutrikdymą tyčia visada"],"BK 29 str. 1 d."],
+["G","Kada sulaikant asmenį leidžiama tyčia padaryti sunkų sveikatos sutrikdymą?",["Sulaikant nusikaltimo vietoje asmenį, tyčia nužudžiusį ar pasikėsinusį nužudyti, jei kitaip sulaikyti neįmanoma","Sulaikant bet kurį vagį","Sulaikant asmenį, kuris bėga","Niekada"],"BK 29 str. 1 d."],
+["G","Kokią žalą sulaikant asmenį leidžia padaryti ANK 14 str. (administracinis nusižengimas)?",["Tik turtinę žalą","Nesunkų sveikatos sutrikdymą","Sunkų sveikatos sutrikdymą","Jokios žalos"],"ANK 14 str. 1 d.: turtinės žalos."],
+["G","Kokios taisyklės taikomos asmeniui, atremiančiam sulaikomo asmens pasipriešinimą?",["Būtinosios ginties taisyklės","Būtinojo reikalingumo taisyklės","Policijos įstatymo taisyklės","Jokios – jis visada atsako"],"BK 29 str. 2 d., ANK 14 str. 2 d."],
+["G","Kada neteisėtas laisvės atėmimas kvalifikuojamas pagal BK 146 str. 2 d.?",["Panaudotas smurtas, sukeltas pavojus gyvybei arba laikyta nelaisvėje ilgiau nei 48 val.","Laikyta ilgiau nei 1 valandą","Sulaikyta be liudininkų","Sulaikyta naktį"],"Pakanka bent vieno iš trijų požymių."],
+["G","Kada žmogaus laisvės suvaržymas yra teisėtas?",["Būtinosios ginties, būtinojo reikalingumo, nusikaltėlio sulaikymo sąlygomis bei vykdant areštą ar laisvės atėmimą","Kai asmuo įžeidinėja","Kai asmuo įtartinai elgiasi","Kai asmuo neturi dokumentų"],"Laisvės suvaržymas teisėtas šiais atvejais."],
+["G","Kas gali būti pilietinių pareigų vykdytoju (pvz., sulaikant nusikaltėlį)?",["Tiek LR pilietis, tiek užsienietis","Tik LR pilietis","Tik šaulys","Tik pareigūnas"],"Pilietinių pareigų vykdytoju gali būti tiek LR pilietis, tiek užsienietis."],
+["G","Pagal ANK 13 str. būtinosios ginties ribos peržengiamos, kai:",["Gynyba akivaizdžiai neatitinka priešingo teisei kėsinimosi pobūdžio ir pavojingumo","Užpuolikui padaroma bet kokia žala","Nebuvo įspėta","Gintasi ne savo namuose"],"ANK 13 str."],
+["G","Kas iš šių NĖRA būtinosios ginties teisėtumo sąlyga?",["Kėsinimasis turi būti baigtas","Kėsinimasis turi būti pavojingas","Kėsinimasis turi būti realus","Kėsinimasis turi būti akivaizdus"],"Baigtas kėsinimasis nesudaro pagrindo būtinajai ginčiai."],
+["G","Kas gali atlikti asmens apžiūrą (pvz., apsaugos darbuotojai masinio renginio metu)?",["Tik tos pačios lyties asmuo","Bet kuris apsaugos darbuotojas","Tik policijos pareigūnas","Šaulys"],"Asmens apžiūrą gali atlikti tik tos pačios lyties asmuo."],
+["G","Ar Asmens ir turto saugos įstatymo teisės (pvz., tikrinti daiktus) taikomos šauliams?",["Ne, jos pateiktos tik kaip pavyzdys","Taip, visiems šauliams","Taip, uniformuotiems šauliams"],"Šios nuostatos šauliams netaikomos.",0],
+
+// ===== P: Pareigos, paėmimas, panaikinimas =====
+["P","Kaip A, B, C kategorijų ginklų savininkas privalo nešiotis trumpuosius šaunamuosius ginklus?",["Taip, kad kiti asmenys jų nematytų","Matomoje vietoje dėkle","Bet kaip, jei turi leidimą","Tik krepšyje"],"GŠKĮ 30 str. 1 d. 1 p."],
+["P","Kas gali nešiotis ginklą matomoje vietoje dėkle?",["Uniformuotas šaulys, vykdydamas tarnybines funkcijas","Bet kuris šaulys","Bet kuris asmuo su leidimu nešiotis","Medžiotojas mieste"],"Taip pat uniformuotas valstybės tarnautojas ar asmuo, turintis ginklą profesinei veiklai."],
+["P","Nuo kokio girtumo laipsnio draudžiama nešiotis ir gabenti ginklą?",["0,41 promilės ir daugiau","0,2 promilės ir daugiau","0,5 promilės ir daugiau","1,0 promilės ir daugiau"],"GŠKĮ 31 str.: 0,41 promilės ir daugiau."],
+["P","Kas gali gabenti apsvaigusio ginklo savininko ginklą iki laikymo vietos?",["Lydintis neapsvaigęs asmuo, turintis teisę naudotis tokios kategorijos ginklu","Bet kuris blaivus asmuo","Tik policija","Niekas – ginklas paliekamas vietoje"],"Gabenant transporto priemone – ne salone."],
+["P","Kur turi būti gabenamas apsvaigusio savininko ginklas, kai jį veža lydintis asmuo transporto priemone?",["Ne transporto priemonės salone","Ant galinės sėdynės","Vairuotojo pašonėje","Pirštinių dėtuvėje"],"Ginklas gabenamas ne transporto priemonės salone."],
+["P","Ko draudžiama daryti panaudojus ginklą?",["Vartoti alkoholį ar psichiką veikiančias medžiagas, kol bus patikrintas blaivumas","Kalbėti telefonu","Valyti ginklą po 48 val.","Išeiti iš namų"],"Iki bus patikrintas blaivumas ar apsvaigimas arba atsisakyta tai atlikti."],
+["P","Kas laikoma parengtu šaudyti ginklu?",["Šovinys įleistas į šovinio lizdą, revolveris atlaužtu gaiduku, templinis – su strėle ir įtempta temple","Ginklas su įdėta dėtuve be šovinio lizde","Ginklas dėkle","Ginklas su išjungtu saugikliu, bet tuščias"],"GŠKĮ 31 str."],
+["P","Kada leidžiama nešiotis parengtą šaudyti ginklą?",["Kai tiesiogiai susiklosto aplinkybės, keliančios grėsmę gyvybei ar sveikatai","Visada, turint leidimą nešiotis","Naktį","Vykstant į šaudyklą"],"Draudžiama, išskyrus tiesioginės grėsmės atvejus."],
+["P","Kurį C kategorijos ginklą leidžiama nešiotis?",["Dujinius pistoletus (revolverius)","Senovinių ginklų kopijas","Pneumatinius ginklus virš 7,5 J","Jokio"],"Draudžiama nešiotis C kat. ginklą, išskyrus dujinius pistoletus (revolverius)."],
+["P","Ar galima nešiotis ilgąjį šaunamąjį ginklą medžioklės plotuose neturint teisės medžioti?",["Ne","Taip, jei turi leidimą nešiotis","Taip, jei ginklas neužtaisytas"],"GŠKĮ 31 str.: draudžiama.",0],
+["P","Kada asmuo privalo išklausyti pilietinio pasipriešinimo kursą (kai jis privalomas)?",["Ne vėliau kaip prieš 6 mėnesius iki leidimo galiojimo pabaigos","Per 1 mėnesį po leidimo gavimo","Kas 2 metus","Per 30 dienų po galiojimo pabaigos"],"GŠKĮ 30 str. 1 d. 9 p."],
+["P","Per kiek laiko reikia informuoti policiją, kai gyvenamojoje vietoje, kur laikomas ginklas, apsigyvena vyresnis kaip 14 metų asmuo?",["Per 10 darbo dienų","Per 30 kalendorinių dienų","Per 3 mėnesius","Informuoti nereikia"],"GŠKĮ 30 str. 1 d. 11 p."],
+["P","Ką privalo padaryti asmuo, perdavęs parduoti ginklą?",["Ginklo pažymėjimą atiduoti subjektui, per kurį parduodamas ginklas","Grąžinti pažymėjimą policijai per 30 dienų","Sunaikinti pažymėjimą","Pasilikti pažymėjimą"],"GŠKĮ 30 str. 1 d. 7 p."],
+["P","Ką privalo daryti ginklo savininkas, pavogus ginklą ar jo pažymėjimą?",["Pranešti policijos įstaigai ir pateikti prašymą dėl pažymėjimo dublikato","Pranešti LŠS","Kreiptis į draudimo bendrovę","Nieko – leidimas nustoja galioti savaime"],"GŠKĮ 30 str. 1 d. 6 p."],
+["P","Ar galima duoti ginklą asmeniui, neturinčiam teisės laikyti ar nešiotis tos kategorijos ginklų?",["Ne (išskyrus GŠKĮ 16 str. 4 d. atvejus – šaudymo sporte ir mokymuose prižiūrint)","Taip, jei asmuo pilnametis","Taip, jei savininkas šalia","Taip, savo namuose"],"GŠKĮ 31 str."],
+["P","Kaip turi būti nešiojamas dujų įrenginys ar elektros šoko įtaisas?",["Taip, kad kiti asmenys jo nematytų","Matomoje vietoje","Tik rankinėje","Bet kaip"],"D kategorijos ginklo savininko pareiga."],
+["P","Kaip D kategorijos ginklas gali būti parduodamas ar perduodamas kitam asmeniui?",["Tik per subjektą, turintį licenciją prekiauti ar importuoti/eksportuoti ginklus","Laisvai bet kam","Per skelbimų portalą","Tik dovanojant"],"GŠKĮ 30 str."],
+["P","Kokio amžiaus asmenims draudžiama be priežiūros perduoti D kategorijos ginklą (ne sportui)?",["Neturintiems 18 metų","Neturintiems 16 metų","Neturintiems 14 metų","Neturintiems 21 metų"],"Sportui – neturintiems 16 metų."],
+["P","Kuriuos D kategorijos ginklus leidžiama nešiotis?",["Elektros šoko įtaisus ir dujų įrenginius","Senovinius ginklus","Pneumatinius ginklus","Visus šaltuosius ginklus"],"Draudžiama nešiotis D kategorijos ginklą, išskyrus elektros šoko įtaisus, dujų įrenginius."],
+["P","Ar D kategorijos ginklo naudotojas gali perduoti ginklą kitam asmeniui?",["Tik su D kategorijos ginklo savininko rašytiniu sutikimu","Laisvai","Niekada"],"Draudžiama be savininko rašytinio sutikimo.",0],
+["P","Kokių šaudmenų suteikia teisę įsigyti leidimas nešiotis ar laikyti ginklus?",["Tik tam ginklui, kuris nurodytas leidime ar ginklo pažymėjime","Bet kokio kalibro","Visų kalibrų tos pačios kategorijos","Tik 9x19"],"GŠKĮ 32 str. 2 d."],
+["P","Kuri veikla NĖRA licencijuojama ūkinė veikla pagal GŠKĮ 19 str.?",["Ginklų laikymas savigynai","Ginklų nuoma","Tirų ir šaudyklų eksploatavimas","Ginklų taisymas"],"Licencijuojama: gamyba, importas/eksportas/vežimas, prekyba, taisymas/perdirbimas, tirų eksploatavimas, nuoma."],
+["P","Ką privalo padaryti asmuo, realizavęs ar praradęs ginklą, kuriam išduotas Europos šaunamojo ginklo leidimas?",["Grąžinti leidimą jį išdavusiai teritorinei policijos įstaigai","Sunaikinti leidimą","Perduoti leidimą pirkėjui","Nieko"],"GŠKĮ 36 str. 3 d."],
+["P","Apie kuriuos ginklo panaudojimo atvejus rekomenduojama pranešti policijai?",["Apie visus, nepriklausomai nuo pasekmių – net jei ginklas tik išsitrauktas","Tik kai žuvo žmogus","Tik kai padaryta turtinė žala","Nerekomenduojama pranešti, jei niekas nenukentėjo"],"Policija kitaip turės tik kitos pusės versiją."],
+["P","Kurios institucijos kontroliuoja ginklų apyvartą Lietuvoje?",["Vidaus reikalų statutinės įstaigos ir Lietuvos Respublikos muitinė","LŠS ir kariuomenė","Prokuratūra","Savivaldybės"],"GŠKĮ 45 str. 1 d."],
+["P","Kuri teisė NESUTEIKTA ginklų apyvartą kontroliuojantiems asmenims?",["Skirti baudžiamąją bausmę","Apžiūrėti ginklus ir jų laikymo vietas","Reikalauti dokumentų","Duoti privalomus nurodymus pašalinti pažeidimus"],"Kontroliuojantys asmenys gali apžiūrėti, reikalauti dokumentų, duoti nurodymus, įeiti į patalpas."],
+["P","Kas yra civilinė ginklų apyvarta?",["Apyvarta, kurią vykdo fiziniai ir juridiniai asmenys, išskyrus specialaus statuso subjektus","Tik prekyba ginklais","Apyvarta tarp kariuomenės ir policijos","Tik medžioklinių ginklų apyvarta"],"Civilinė apyvarta – išskyrus specialaus statuso subjektus."],
+["P","Kurie teisės aktų straipsniai numato atsakomybę už ginklų apyvartos pažeidimus?",["ANK 227–234-2 str. ir BK 253–258 str.","BK 28–31 str.","ANK 13–16 str.","GŠKĮ 1–7 str."],"Administracinė ir baudžiamoji atsakomybė."],
+["P","Kuris iš šių NĖRA GŠKĮ 41 str. numatytas ginklų paėmimo pagrindas?",["Ginklo savininkas pakeitė darbovietę","Mirus ginklo savininkui","Asmeniui raštu atsisakius ginklo","Įtarus, kad ginklas buvo nusikalstamos veikos įrankis"],"Darbovietės pakeitimas nėra paėmimo pagrindas."],
+["P","Kas nutinka su ginklais nepaprastosios, karo padėties metu ar paskelbus mobilizaciją?",["Paliekami teisę juos laikyti turintiems asmenims, išskyrus kai reikalingi pajėgoms ar kyla grėsmė","Visi paimami","Perduodami LŠS","Perduodami kariuomenei"],"GŠKĮ 41 str. 2 d."],
+["P","Kas daroma, kai policija neranda ginklo arba negali jo paimti, nes savininkas išvykęs?",["Organizuojama ginklo paieška","Ginklas laikomas sunaikintu","Savininkui skiriama bauda","Byla nutraukiama"],"GŠKĮ 41 str. 3 d."],
+["P","Per kiek laiko asmuo, iš kurio paimti ginklai (41 str. 1 d. 1–3 p.), turi kreiptis dėl jų realizavimo?",["Per 6 mėnesius","Per 30 dienų","Per 10 dienų","Per 1 metus"],"Nesikreipus – policija perduoda ginklus sunaikinti."],
+["P","Kas nutinka su ginklais, kai asmuo raštu jų atsisako?",["Policija perduoda juos Vyriausybės įgaliotai institucijai sunaikinti","Grąžinami gamintojui","Parduodami aukcione savininko naudai","Perduodami LŠS"],"GŠKĮ 41 str. 4 d."],
+["P","Iki kada paimami ginklai, kai asmuo įtariamas padaręs GŠKĮ 18 str. 2 d. 1–5 p. veiką?",["Iki ikiteisminio tyrimo ar bylos nutraukimo arba išteisinamojo nuosprendžio ir sprendimo dėl grąžinimo","30 dienų","6 mėnesius","Visam laikui"],"GŠKĮ 41 str. 6 d."],
+["P","Kas daroma su ginklais, jei sprendimas panaikinti leidimą apskundžiamas?",["Laikinai paimami saugoti iki galutinio sprendimo","Paliekami savininkui","Sunaikinami","Parduodami"],"GŠKĮ 41 str. 7 d."],
+["P","Kada įsigalioja leidimo galiojimo panaikinimas?",["Iš karto po sprendimo priėmimo, nors jis ir ginčijamas","Po 30 dienų","Kai teismas patvirtina","Po apskundimo termino"],"GŠKĮ 40 str. 8 d."],
+["P","Kada panaikinamas šaulio tarnybai skirto ginklo leidimas?",["Netekus narystės Lietuvos šaulių sąjungoje","Pakeitus gyvenamąją vietą","Nedalyvaujant pratybose 1 metus","Sulaukus 65 metų"],"GŠKĮ 40 str. 5 d."],
+["P","Kada panaikinamas kario savanorio leidimas individualiems įgūdžiams tobulinti?",["Karį atleidus iš tarnybos","Kariui pakeitus dalinį","Kariui išvykus į misiją","Niekada"],"GŠKĮ 40 str. 5 d."],
+["P","Kada panaikinamas šeimos nario, kuriam perleistas ginklas (16 str. 1 d.), leidimas?",["Kai jis pradeda gyventi skyrium nuo ginklą perleidusio šeimos nario","Kai sueina 25 metai","Kai savininkas įsigyja naują ginklą","Niekada"],"GŠKĮ 40 str. 6 d."],
+["P","Kas priima sprendimą panaikinti leidimo galiojimą?",["Leidimą išdavusios policijos įstaigos vadovas ar jo įgaliotas asmuo","LŠS vadas","Teismas","Vidaus reikalų ministras"],"GŠKĮ 40 str. 9 d."],
+["P","Ar leidimo panaikinimas laikomas bausme?",["Ne, tai privilegijos praradimas – bauda ir panaikinimas už tą patį nelaikomi dvigubu baudimu","Taip, tai administracinė nuobauda","Taip, tai baudžiamoji bausmė"],"Leidimo panaikinimas – privilegijos praradimas.",0],
+["P","Kuris pagrindas lemia leidimo galiojimo panaikinimą?",["Neteisėtas didelės talpos dėtuvės įgijimas ar laikymas","Gyvenamosios vietos pakeitimas","Naujo ginklo įsigijimas","Santuokos sudarymas"],"GŠKĮ 40 str. 1 d. 12 p."],
+["P","Ar leidimas panaikinamas tik dėl to, kad asmuo įtariamas padaręs nusikalstamą veiką (18 str. 2 d. 9 p.)?",["Ne – šis pagrindas išimtas iš panaikinimo pagrindų, bet ginklai paimami","Taip, iškart","Taip, po 30 dienų"],"GŠKĮ 40 str. 1 d. 5 p. išskiria 18 str. 2 d. 9 p.; ginklai paimami pagal 41 str.",0],
+["P","Kada panaikinamas leidimas laiku jo nepratęsus?",["Kai asmuo, gavęs policijos įspėjimą, į jį nereaguoja","Iškart kitą dieną po galiojimo pabaigos","Po 1 metų","Niekada – jį galima pratęsti bet kada"],"GŠKĮ 40 str. 2 d."],
+["P","Kuriais teisės aktais galima apskųsti sprendimą panaikinti leidimą?",["Viešojo administravimo, Ikiteisminio administracinių ginčų nagrinėjimo tvarkos arba Administracinių bylų teisenos įstatymais","Tik Civiliniu kodeksu","Tik per LŠS","Neskundžiamas"],"Asmens pasirinkimu – GŠKĮ 40 str. 9 d."],
+["P","Ar trukdymas kontroliuojančiosioms institucijoms atlikti patikrinimą gali lemti leidimo panaikinimą?",["Taip","Ne","Tik pakartotinai per metus"],"GŠKĮ 40 str. 1 d. 9 p.",0],
+["P","Per kiek laiko realizavęs paimtą ginklą prekybininkas savininkui sumoka pinigus (atskaičius išlaidas)?",["Per 10 kalendorinių dienų","Per 30 kalendorinių dienų","Per 6 mėnesius","Per 5 darbo dienas"],"GŠKĮ 41 str. 5 d."],
+
+// ===== T: Saugos taisyklės, tirai =====
+["T","Ar taktikos mokymų metu galima užtaisyti ginklą negavus tiesioginio vado komandos?",["Ne","Taip, jei pavojus","Taip, imitaciniais šoviniais"],"Saugos taisyklės: draudžiama užtaisyti ginklą negavus vado komandos.",0],
+["T","Kada pratybų metu galima laikyti pirštą ant nuleistuko?",["Tik šaudant – kai nešaudoma, draudžiama","Visada, jei ginklas neužtaisytas","Kai ginklas su saugikliu","Judant"],"Draudžiama laikyti pirštą ant nuleistuko, kai nešaudoma."],
+["T","Mažesniu nei kokiu atstumu draudžiama šaudyti imitaciniais šaudmenimis į žmonių pusę iš šaulių ginklų?",["50 m","25 m","100 m","10 m"],"Šaulių ginklais – ne arčiau kaip 50 m."],
+["T","Mažesniu nei kokiu atstumu draudžiama šaudyti imitaciniais šaudmenimis į žmonių pusę iš kulkosvaidžio?",["100 m","50 m","200 m","25 m"],"Kulkosvaidžiu – ne arčiau kaip 100 m."],
+["T","Ar galima šaudyti imitaciniais šaudmenimis patalpoje?",["Ne","Taip, su klausos apsauga","Taip, jei patalpa didelė"],"Draudžiama šaudyti imitaciniais šaudmenimis patalpoje.",0],
+["T","Kada surenkamos iššautų šaudmenų tūtos taktikos pratybose?",["Baigus šaudyti","Šaudymo metu","Kiekvieną pertrauką tarp šūvių","Kitą dieną"],"Draudžiama rinkti tūtas šaudymo metu."],
+["T","Ką privaloma padaryti prieš keičiant šaudymo ar šaulio poziciją?",["Nustatyti keitiklį į saugos padėtį","Išimti dėtuvę","Iššauti likusius šovinius","Pranešti radijo ryšiu"],"Draudžiama keisti poziciją nenustačius keitiklio į saugos padėtį."],
+["T","Ar galima užtaisyti ginklą didesniu nei vado nurodytu šovinių kiekiu?",["Ne","Taip, jei dėtuvė talpina","Taip, atsargai"],"Draudžiama.",0],
+["T","Kur draudžiama šaudyti signalines raketas ir imitacinius šaudmenis?",["Tarp pastatų, netoli šieno, javų, šiaudų kupetų, greta karinės įrangos ir tankiai apaugusių vietovių","Atviruose laukuose","Šaudyklose","Paplūdimiuose"],"Saugos taisyklių 10 p."],
+["T","Iš patalpos į lauko pusę imitaciniais šaudmenimis šaudyti draudžiama, jei:",["Patalpoje yra asmenų be klausos apsaugos priemonių","Lauke yra žmonių","Patalpa mažesnė nei 20 m²","Visada leidžiama"],"Saugos taisyklių 7 p."],
+["T","Kuris iš šių yra specialaus statuso subjektas?",["Lietuvos šaulių sąjunga","Lietuvos medžiotojų ir žvejų draugija","Lietuvos šaudymo sporto sąjunga","Privati saugos bendrovė"],"Tarp specialaus statuso subjektų – LŠS, muitinė, VSD, prokuratūra ir kt."],
+["T","Kuri institucija NĖRA specialaus statuso subjektas?",["Savivaldybės administracija","Lietuvos Respublikos muitinė","Valstybės saugumo departamentas","Vadovybės apsaugos tarnyba"],"Savivaldybės administracija nėra išvardyta."],
+["T","Kurios taisyklės galioja dalyvaujant LK pratybose?",["Atitinkamo specialaus statuso subjekto taisyklės","Tik LŠS taisyklės","Tiro taisyklės","Jokios"],"Galioja atitinkamo specialaus statuso subjekto taisyklės."],
+["T","Kas gali būti ugnies linijoje šaudymo metu?",["Tik šaudymo vadovas, instruktoriai ir šauliai","Visi tiro lankytojai","Žiūrovai su apsaugos priemonėmis","Bet kas su leidimu"],"Tiro taisyklės."],
+["T","Iš kokių ginklų vienu metu galima šaudyti ugnies linijoje?",["Tik iš ilgųjų arba tik iš trumpųjų, tik lygiavamzdžių arba tik graižtvinių","Iš bet kokių kartu","Tik iš pneumatinių","Tik iš A kategorijos"],"Vienu metu – tik vienos rūšies ginklai."],
+["T","Kas tire ar šaudykloje duoda komandas?",["Tik šaudymo vadovas","Bet kuris instruktorius","Vyriausias šaulys","Tiro savininkas"],"Visas komandas duoda tik šaudymo vadovas."],
+["T","Kaip ginklai įnešami į ugnies liniją ir išnešami iš jos?",["Neužtaisyti ir dėkle, rankinėje ar kitame pritaikytame daikte","Užtaisyti su saugikliu","Rankose, nukreipti į žemę","Dėtuvė įdėta, bet be šovinio lizde"],"Tiro taisyklės."],
+["T","Kaip galima įnešti perlenkiamą ginklą (iš kurio perlenkto iššauti neįmanoma)?",["Neįdėtą į dėklą, tačiau perlenktą","Tik dėkle","Užtaisytą, bet perlenktą","Bet kaip"],"Perlenkiami ginklai gali būti nešami be dėklo, bet perlenkti."],
+["T","Kada galima užtaisyti trumpąjį šaunamąjį ginklą tire?",["Tik ugnies linijoje po komandos „pasiruošti“","Prieš įeinant į tirą","Ugnies linijoje bet kada","Prie taikinių"],"Trumpieji – tik po komandos „pasiruošti“."],
+["T","Kaip asmuo tarp šūvių gali padėti ginklą?",["Nukreipęs vamzdį į taikinių pusę ir išėmęs šovinius ar dėtuvę","Bet kaip, jei įjungtas saugiklis","Atsuktą į šoną","Užtaisytą ant stalo"],"Ilgieji ginklai gali būti sustatyti į piramidę."],
+["T","Kaip tarp šūvių padedamas revolveris?",["Atlenkus būgnelį į šoną arba perlaužtas","Užtaisytas, su nuleistu gaiduku","Įdėtas į dėklą užtaisytas","Bet kaip"],"Revolveris padedamas tik atlenkus būgnelį arba perlaužtas."],
+["T","Kada ginklas gali būti išneštas iš ugnies linijos?",["Tik leidus šaudymo vadovui","Bet kada, kai neužtaisytas","Po paskutinio šūvio","Kai baigiasi laikas"],"Tiro taisyklės."],
+["T","Ką asmuo turi padaryti iššovęs paskutinį šūvį arba gavęs komandą nutraukti šaudymą?",["Išimti dėtuvę, šovinius iš vamzdžio ir parodyti šaudymo vadovui ginklą su atitraukta spyna","Iškart įdėti ginklą į dėklą","Nueiti prie taikinių","Padėti ginklą ir išeiti"],"Nepalikęs pozicijos parodo vadovui, kad ginklas neužtaisytas."],
+["T","Kaip einama prie taikinių?",["Ginklą palikus ugnies linijoje (vamzdis į taikinius) arba įsidėjus į dėklą","Su ginklu rankose","Su ginklu dėkle ant diržo užtaisytu","Paėmus ginklą ir nukreipus į žemę"],"Tiro taisyklės."],
+["T","Kada šaudymo vadovas privalo nedelsdamas duoti komandą nutraukti šaudymą?",["Įvykus nelaimingam atsitikimui ar ugnies zonoje atsiradus žmogui, gyvūnui ar transporto priemonei","Kai šaulys prameta","Kai baigiasi taikiniai","Kai pradeda lyti"],"Tiro taisyklės."],
+["T","Kuris veiksmas tire DRAUDŽIAMAS?",["Liesti svetimą ginklą be savininko sutikimo","Klausytis šaudymo vadovo","Nešioti klausos apsaugą","Šaudyti į savo taikinį"],"Tiro taisyklių draudimas Nr. 8."],
+["T","Kuris veiksmas tire DRAUDŽIAMAS?",["Taikytis į taikinius nesant ugnies linijoje","Užtaisyti ginklą ugnies linijoje po komandos","Padėti ginklą vamzdžiu į taikinius","Parodyti vadovui tuščią ginklą"],"Tiro taisyklių draudimas Nr. 2."],
+["T","Ar galima liesti ginklą, kai ugnies zonoje yra žmonių ar gyvūnų?",["Ne","Taip, jei ginklas neužtaisytas","Taip, jei vadovas neprieštarauja"],"Tiro taisyklių draudimas Nr. 5.",0],
+["T","Kam draudžiama leisti šaudyti iš automatinio šaunamojo ginklo tire?",["Asmenims, neturintiems dokumento, patvirtinančio teisę laikyti ar nešiotis tokį ginklą","Asmenims iki 25 metų","Užsieniečiams","Moterims"],"Tiro taisyklių draudimas Nr. 13."],
+["T","Kur užtaisomi stendiniam šaudymui skirti, nedidelės galios ir pneumatiniai ginklai?",["Tik ugnies linijoje, vamzdžius nukreipus į ugnies zoną","Bet kur tiro teritorijoje","Prie automobilio","Ginklų sandėlyje"],"Tiro taisyklės."],
+["T","Kokie turi būti visų asmenų ginklai nutraukus šaudymą?",["Neužtaisyti – užtaisyti tik gavus šaudymo vadovo leidimą","Užtaisyti, su saugikliu","Dėkle, užtaisyti","Nereglamentuojama"],"Tiro taisyklės."],
+["T","Kada instruktažas tire neprivalomas?",["Kai šaudo pakankamą patirtį (ne mažiau 3 m.) turintys asmenys, įrašyti į vadovo patvirtintą sąrašą","Kai asmuo turi leidimą","Kai asmuo šaulys","Kai šaudo mažiau nei 10 šūvių"],"Instruktažo žurnalo parašo skiltis tada paliekama tuščia."],
+["T","Kokia minimali ginklo naudojimo patirtis reikalinga, kad instruktažas tire nebūtų privalomas?",["3 metai","1 metai","5 metai","10 metų"],"Ne mažesnė kaip trejų metų ginklo naudojimo patirtis."],
+["T","Kurios skilties NĖRA tiro instruktažo žurnale?",["Asmens kodo","Apsilankymo datos ir laiko","Ginklų, su kuriais numatoma šaudyti, numerių","Šaudymo vadovo parašo"],"Skiltys: data ir laikas, vardas, pavardė, ginklų numeriai, vadovo parašas, asmens parašas."],
+["T","Ką privalo padaryti šaudymo vadovas, prieš leisdamas šaudyti iš asmeniui priklausančio ginklo?",["Sutikrinti leidime nurodytus ginklo duomenis su pateiktu ginklu","Patikrinti ginklo kainą","Išbandyti ginklą pats","Paskambinti policijai"],"Tik duomenims atitikus leidžiama šaudyti."],
+["T","Kada asmuo be leidimo gali šaudyti tire iš kito asmens ginklo?",["Kai ginklą perduodantis asmuo yra šalia ir tai leidžia tiro eksploatuotojas","Niekada","Bet kada, jei pilnametis","Tik iš pneumatinio"],"Tiro taisyklės."],
+["T","Kas gali tire šaudyti be šaudymo vadovo?",["Pakankamą patirtį turintys asmenys iš savo ginklų, įrašyti į vadovo patvirtintą sąrašą","Bet kuris šaulys","Bet kuris asmuo su leidimu nešiotis","Niekas"],"Tiro taisyklės."],
+["T","Kuo patvirtintos šaudymo tirų ir šaudyklų taisyklės?",["Lietuvos policijos generalinio komisaro 2003-06-30 įsakymu Nr. 383","LŠS vado 2016-11-28 įsakymu Nr. 369","Krašto apsaugos ministro įsakymu","Seimo nutarimu"],"Policijos generalinio komisaro 2003 m. birželio 30 d. įsakymas Nr. 383."],
+["T","Ar galima pratybose palikti ginklą be priežiūros?",["Ne","Taip, jei jis neužtaisytas","Taip, trumpam"],"Saugos taisyklių 11 p.",0],
+["T","Ar galima nukreipti neužtaisytą ginklą į žmones taktikos pratybose?",["Ne (išskyrus šaudymą imitaciniais šoviniais laikantis nustatytų atstumų)","Taip, jei neužtaisytas","Taip, treniruojant taikymąsi"],"Saugos taisyklių 3 p.",0],
+["T","Kuris veiksmas tire DRAUDŽIAMAS?",["Ugnies linijoje atsukti ginklą į žiūrovus","Įnešti ginklą dėkle","Laikyti ginklą nukreiptą į taikinius","Klausytis komandų"],"Tiro taisyklių draudimas Nr. 4."],
+["T","Kam draudžiama leisti šaudyti tire?",["Apsvaigusiems nuo alkoholio ar psichiką veikiančių medžiagų","Asmenims be uniformos","Asmenims su akiniais","Kairiarankiams"],"Tiro taisyklių draudimas Nr. 14."],
+["T","Ar galima šaudyti į kitiems šauliams skirtus taikinius?",["Ne","Taip, jei jie baigė šaudyti","Taip, su vadovo leidimu"],"Tiro taisyklių draudimas Nr. 9.",0],
+
+// ===== U: Situaciniai uždaviniai =====
+["U","J. R. reikalavo iš P. A. pinigų ir grasino. Kai J. R. atvažiavo į kiemą, P. A. paėmė užtaisytą šautuvą, paprašė išvažiuoti, o J. R. pradėjus eiti artyn – pirmu šūviu peršovė jam koją. Kaip vertinti P. A. veiksmus?",["Neteisėti","Teisėti"],"Nebuvo pavojingo ir akivaizdaus kėsinimosi, P. A. neįspėjo apie ginklo panaudojimą – tik paprašė išvažiuoti.",0],
+["U","Paštininką aptvertoje sodyboje su ženklu „Atsargiai – piktas šuo“ užpuolė šuo. Įvertinęs, kad negali pabėgti, o užpuolimas kelia grėsmę gyvybei, paštininkas šunį nušovė. Kaip vertinti jo veiksmus?",["Teisėti","Neteisėti"],"Ginklą galima naudoti prieš gyvūną, keliantį pavojų gyvybei ar sveikatai; pavojaus nebuvo galima pašalinti kitomis priemonėmis (būtinasis reikalingumas).",0],
+["U","Naktį P. K. pamatė iš jo garažo bėgantį asmenį su benzininiu pjūklu. Po reikalavimo sustoti ir įspėjamojo šūvio asmuo bėgo toliau – P. K. peršovė jam koją, padarydamas sunkų sveikatos sutrikdymą. Kaip vertinti P. K. veiksmus?",["Neteisėti","Teisėti"],"Sulaikant turtinį nusikaltimą padariusį asmenį tyčia padaryti sunkaus sveikatos sutrikdymo negalima (BK 29 str.).",0],
+["U","V. R. įžeidinėjo A. J. ir sudavė jam per veidą. A. J. peršovė V. R. ranką, o šiam pradėjus bėgti – iššovė į nugarą (sunkus sveikatos sutrikdymas). Kaip vertinti A. J. veiksmus?",["Neteisėti","Teisėti"],"Gynyba aiškiai neatitiko kėsinimosi pavojingumo, o šūvis į bėgantį – kėsinimasis jau pasibaigęs.",0],
+["U","D. A. naktį namuose užpuolė du kaukėti įsibrovėliai. Išsigandęs jis pradėjo chaotiškai šaudyti – vienas sužeistas, kitas žuvo. Kaip vertinti D. A. veiksmus?",["Teisėti","Neteisėti"],"Ribų peržengimu nelaikoma veika dėl didelio išgąsčio ar ginantis nuo įsibrovimo į būstą.",0],
+["U","Asmuo buvo nuteistas dėl neteisėto daugiau kaip trijų šaunamųjų ginklų laikymo, bet Prezidento dekretu atleistas nuo bausmės. Ar jis gali gauti leidimą?",["Ne, jei po teistumo išnykimo ar panaikinimo nepraėjo 15 metų","Ne, niekada","Taip","Taip, praėjus 3 metams nuo nuosprendžio"],"Nusikaltimas susijęs su disponavimu ginklais (GŠKĮ 18 str. 2 d. 5 p.) – 15 metų po teistumo išnykimo."],
+["U","Šaulys grįžta iš šaudyklos. Ginklas dėkle, bet dėtuvė su šoviniais įdėta į ginklą. Ar tai atitinka gabenimo reikalavimus?",["Ne – dėtuvė turi būti išimta, šaudmenys išimti iš dėtuvės, būgnelio ir vamzdžio","Taip, nes ginklas dėkle","Taip, jei šovinio lizdas tuščias","Taip, jei įjungtas saugiklis"],"GŠKĮ 2 str. 12 d."],
+["U","Po vakarėlio (0,6 promilės) šaulys nori parsivežti savo pistoletą namo. Kaip teisėta tai padaryti?",["Ginklą gali gabenti lydintis blaivus asmuo, turintis teisę naudotis tokios kategorijos ginklu, ne automobilio salone","Pats gali parsivežti, jei ginklas dėkle","Gali nešiotis paslėptą, nes turi leidimą nešiotis","Turi kviesti policiją, kad paimtų ginklą"],"Apsvaigusiam draudžiama nešiotis ir gabenti ginklą (nuo 0,41 promilės)."],
+["U","Šaulys rado miške šautuvą. Ką jis turi daryti?",["Nedelsiant pranešti policijai ir ginklo negabenti","Atnešti ginklą į policijos komisariatą","Pasiimti namo ir paskambinti policijai","Perduoti LŠS rinktinei"],"Draudžiama rastus ginklus gabenti – policija paima radimo vietoje."],
+["U","Šaulys nori perdaryti savo pusiau automatinį šautuvą į automatinį. Ar bus išduotas leidimas perdirbti?",["Ne – perdirbimas pakeistų pirminius rūšies požymius","Taip, nes šauliui leidžiami automatiniai ginklai","Taip, licencijuotoje dirbtuvėje","Taip, gavus LŠS vado sutikimą"],"Leidimas perdirbti neišduodamas, jei pakeistų pirminius rūšies požymius."],
+["U","Šaulio leidimas baigė galioti prieš savaitę, jis vis dar laiko pistoletą namie seife. Ką turėjo padaryti?",["Nedelsiant atiduoti ginklą laikinai saugoti teritorinei policijos įstaigai","Nieko – yra 30 dienų lengvatinis laikotarpis","Parduoti ginklą per 6 mėnesius","Perduoti ginklą LŠS"],"Pasibaigus leidimui ginklas nedelsiant atiduodamas policijai."],
+["U","Šaulys su 9x19 pistoletu parduotuvėje nori nusipirkti 9x18 Makarov šovinių „ateičiai“. Ar tai leidžiama?",["Ne – šaudmenis galima įsigyti tik turimų ginklų kalibrui","Taip, nes kalibras 9 mm","Taip, jei turi leidimą B kategorijai","Taip, iki 100 vnt."],"Išimtys tik teisės aktų aiškiai numatytais atvejais (pvz., .357 Magnum → .38 Special)."],
+["U","Šaulio sutuoktinė turi leidimą B kategorijos ginklui, jie gyvena kartu. Ar šaulys gali jai perleisti naudoti savo pistoletą?",["Taip – ginklas turi būti laikomas šaulio (perleidusio) būste","Ne, niekada","Taip, ji gali jį išsivežti pas save","Taip, tik su notaro sutartimi"],"GŠKĮ 16 str. 1 d."],
+["U","Šaulys pratybose per pertrauką nori trumpam palikti savo ginklą ant stalo ir nueiti pavalgyti. Ką jis turi daryti?",["Laikinai perduoti ginklą tik pratybų vadovui ar tiesioginiam vadui","Palikti ant stalo, jei neužtaisytas","Perduoti draugui šauliui","Užrakinti automobilyje"],"Draudžiama palikti ginklą be priežiūros; perduoti galima tik pratybų vadovui ar tiesioginiam vadui."],
+["U","Įsibrovėlis, pamatęs ginklą, numeta lazdą ir bėga iš kiemo. Ar galima jam šauti į nugarą būtinosios ginties pagrindu?",["Ne – kėsinimasis pasibaigė ir nebėra akivaizdus","Taip, nes jis buvo ginkluotas","Taip, jei jis dar teritorijoje","Taip, po įspėjamojo šūvio"],"Baigtas, pavojaus nebekeliantis kėsinimasis nelaikomas akivaizdžiu."],
+["U","Šaulys, vykdydamas pagalbą policijai, bet be pareigūno šalia, sustabdė automobilį ir nori patikrinti vairuotojo dokumentus. Ar jis turi tokią teisę?",["Ne – tai gali daryti tik įgaliojimus turintys pareigūnai","Taip, nes jis šaulys","Taip, jei dėvi uniformą","Taip, jei turi ginklą"],"Šaulys gali padėti tik kai pareigūnas yra šalia."],
+["U","Asmuo mieste išsitraukė ginklą konflikto metu, bet neiššovė. Ką rekomenduojama daryti?",["Kuo greičiau pranešti policijai – kitaip ji turės tik kitos pusės versiją","Nieko – iššauta nebuvo","Pranešti tik jei kita pusė skųsis","Pranešti LŠS vadui"],"Rekomenduojama pranešti apie visus atvejus."],
+["U","Šaulys persikraustė į kitą miestą ir ten laikys ginklus. Ką turi padaryti?",["Per 10 dienų informuoti naujos vietos policijos įstaigą ir pateikti laikymo sąlygų deklaraciją","Gauti naują leidimą","Nieko – leidimas galioja","Perregistruoti ginklus senoje policijos įstaigoje"],"Leidimas galioja ir nekeičiamas, bet būtina informuoti ir pateikti deklaraciją."],
+["U","Šaulys gavo dovanų iš tėvo B kategorijos pistoletą. Per kiek laiko ir kur jį registruoti?",["Per 10 kalendorinių dienų nuo ginklo dokumento gavimo leidimą išdavusioje teritorinėje policijos įstaigoje","Per 30 dienų bet kurioje policijos įstaigoje","Per 6 mėnesius LŠS","Registruoti nereikia – ginklas jau registruotas tėvo vardu"],"Padovanotą ginklą registruoti per 10 kalendorinių dienų."],
+["U","Šaulys nori tire leisti pašaudyti iš savo pistoleto draugui, kuris neturi leidimo. Kada tai galima?",["Kai šaulys yra šalia, šaudymo vadovas sutikrina leidimo duomenis ir tai leidžia tiro eksploatuotojas","Niekada","Bet kada, jei draugas pilnametis","Tik su policijos leidimu"],"Tiro taisyklės."]
+];
+
+(function(){
+  const $ = id => document.getElementById(id);
+  const LS = {
+    get(k,d){try{const v=localStorage.getItem('gstk_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+    set(k,v){try{localStorage.setItem('gstk_'+k,JSON.stringify(v))}catch(e){}}
+  };
+  const counts = {}; Q.forEach(q=>counts[q[0]]=(counts[q[0]]||0)+1);
+  $('topMeta').innerHTML = 'Klausimų: ' + Q.length + ' · Temų: ' + Object.keys(SECTIONS).length;
+
+  // chips
+  let selected = new Set(LS.get('secs', Object.keys(SECTIONS)));
+  let nChoice = LS.get('n', 50);
+  const chips = $('chips');
+  Object.entries(SECTIONS).forEach(([k,name])=>{
+    const l=document.createElement('label'); l.className='chip';
+    l.innerHTML=`<input type="checkbox" id="sec_${k}" value="${k}"> ${name} <span class="n">${counts[k]||0}</span>`;
+    const cb=l.querySelector('input'); cb.checked=selected.has(k);
+    cb.addEventListener('change',()=>{cb.checked?selected.add(k):selected.delete(k);refreshStart()});
+    chips.appendChild(l);
+  });
+  $('selAll').onclick=()=>{chips.querySelectorAll('input').forEach(c=>{c.checked=true;selected.add(c.value)});refreshStart()};
+  $('selNone').onclick=()=>{chips.querySelectorAll('input').forEach(c=>{c.checked=false});selected.clear();refreshStart()};
+  $('countSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{nChoice=+b.dataset.n;refreshStart()});
+  $('shuffleOpts').checked = LS.get('shuf', true);
+
+  function pool(){return Q.map((q,i)=>i).filter(i=>selected.has(Q[i][0]))}
+  function refreshStart(){
+    const p=pool().length;
+    $('countSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', String(+b.dataset.n===nChoice)));
+    const n = nChoice===0?p:Math.min(nChoice,p);
+    $('countNote').textContent = p===0 ? 'Pasirinkite bent vieną temą' : `Bus pateikta ${n} iš ${p} klausimų`;
+    $('startBtn').disabled = p===0;
+    const old=LS.get('wrong',[]).filter(i=>i<Q.length);
+    $('retryOld').hidden = old.length===0;
+    $('retryOld').textContent = `Ankstesnės klaidos (${old.length})`;
+    LS.set('secs',[...selected]); LS.set('n',nChoice);
+  }
+  refreshStart();
+
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+  let run=null;
+  function startRun(ids){
+    LS.set('shuf',$('shuffleOpts').checked);
+    run={ids, pos:0, ok:0, no:0, answers:[], locked:false};
+    $('start').hidden=true; $('results').hidden=true; $('quiz').hidden=false;
+    $('tally').innerHTML=ids.map(()=>'<i></i>').join('');
+    render(); window.scrollTo({top:0});
+  }
+  $('startBtn').onclick=()=>{
+    let ids=shuffle(pool());
+    if(nChoice) ids=ids.slice(0,nChoice);
+    startRun(ids);
+  };
+  $('retryOld').onclick=()=>startRun(shuffle(LS.get('wrong',[]).filter(i=>i<Q.length)));
+
+  const KEYS='ABCDE';
+  function render(){
+    const qi=run.ids[run.pos], q=Q[qi];
+    const fixed = q[4]!==undefined;
+    let order = q[2].map((t,i)=>i);
+    if(!fixed && $('shuffleOpts').checked) shuffle(order);
+    run.cur={qi, order, correct: fixed?q[4]:0};
+    $('qSec').textContent=SECTIONS[q[0]];
+    $('qNum').textContent=`#${qi+1}`;
+    $('qText').textContent=q[1];
+    const box=$('opts'); box.innerHTML='';
+    order.forEach((oi,k)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='opt'; b.id='opt'+k;
+      b.innerHTML=`<span class="key">${KEYS[k]}</span><span class="txt"></span><span class="mark"></span>`;
+      b.querySelector('.txt').textContent=q[2][oi];
+      b.onclick=()=>answer(k);
+      box.appendChild(b);
+    });
+    $('fb').innerHTML=''; $('nextBtn').disabled=true; run.locked=false;
+    $('nextBtn').textContent = run.pos===run.ids.length-1 ? 'Rezultatai →' : 'Toliau →';
+    $('endConfirm').hidden=true; $('endBtn').hidden=false;
+    updateBoard();
+  }
+  function updateBoard(){
+    const done=run.ok+run.no;
+    $('sPos').textContent=`${Math.min(run.pos+1,run.ids.length)}/${run.ids.length}`;
+    $('sOk').textContent=run.ok; $('sNo').textContent=run.no;
+    $('sPct').textContent= done? Math.round(run.ok/done*100)+'%' : '–';
+    $('barFill').style.width=(done/run.ids.length*100)+'%';
+    const cells=$('tally').children;
+    for(let i=0;i<cells.length;i++){cells[i].classList.toggle('cur',i===run.pos && !run.locked)}
+  }
+  function answer(k){
+    if(run.locked) return;
+    const {qi,order,correct}=run.cur; const q=Q[qi];
+    if(k>=order.length) return;
+    run.locked=true;
+    const picked=order[k], isOk = picked===correct;
+    const btns=$('opts').children;
+    for(let j=0;j<btns.length;j++){
+      const b=btns[j]; b.disabled=true;
+      if(order[j]===correct){b.classList.add('correct'); b.querySelector('.mark').textContent='✓'}
+      else if(j===k){b.classList.add('wrong'); b.querySelector('.mark').textContent='✗'}
+      else b.classList.add('dim');
+    }
+    if(isOk) btns[k].classList.add('picked');
+    isOk?run.ok++:run.no++;
+    run.answers.push({qi,picked,ok:isOk});
+    $('tally').children[run.pos].className = isOk?'ok':'no';
+    $('fb').innerHTML=`<div class="feedback ${isOk?'ok':'no'}"><b>${isOk?'Teisingai':'Neteisingai'}</b><p></p></div>`;
+    $('fb').querySelector('p').textContent = (isOk?'':'Teisingas atsakymas: '+q[2][correct]+'. ') + (q[3]||'');
+    // persist wrong set
+    const w=new Set(LS.get('wrong',[]));
+    isOk?w.delete(qi):w.add(qi); LS.set('wrong',[...w]);
+    $('nextBtn').disabled=false; $('nextBtn').focus({preventScroll:true});
+    updateBoard();
+  }
+  function next(){
+    if(!run.locked) return;
+    if(run.pos<run.ids.length-1){run.pos++;render();$('qcard').scrollIntoView({block:'nearest'})}
+    else finish();
+  }
+  $('nextBtn').onclick=next;
+  $('endBtn').onclick=()=>{$('endConfirm').hidden=false;$('endBtn').hidden=true};
+  $('endNo').onclick=()=>{$('endConfirm').hidden=true;$('endBtn').hidden=false};
+  $('endYes').onclick=finish;
+
+  document.addEventListener('keydown',e=>{
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    if(!$('quiz').hidden){
+      const k=e.key.toUpperCase();
+      let idx=-1;
+      if(/^[1-5]$/.test(k)) idx=+k-1; else if(KEYS.includes(k)&&k.length===1) idx=KEYS.indexOf(k);
+      if(idx>=0 && !run.locked){e.preventDefault();answer(idx);return}
+      if(e.key==='Enter' && run.locked){e.preventDefault();next()}
+    } else if(!$('start').hidden && e.key==='Enter' && !$('startBtn').disabled && document.activeElement.tagName!=='BUTTON'){ $('startBtn').click() }
+  });
+
+  function targetSVG(pct){
+    const rings=[90,72,54,36,18];
+    const css=getComputedStyle(document.documentElement);
+    let s='';
+    rings.forEach((r,i)=>{s+=`<circle cx="100" cy="100" r="${r}" fill="${i%2? 'var(--surface)':'var(--surface-2)'}" stroke="var(--line)" stroke-width="1"/>`});
+    const C=2*Math.PI*90, len=C*pct/100;
+    s+=`<circle cx="100" cy="100" r="90" fill="none" stroke="${pct>=80?'var(--good)':pct>=60?'var(--brass)':'var(--bad)'}" stroke-width="8" stroke-dasharray="${len} ${C}" transform="rotate(-90 100 100)" stroke-linecap="round"/>`;
+    s+=`<line x1="100" y1="88" x2="100" y2="112" stroke="var(--muted)" stroke-width="1"/><line x1="88" y1="100" x2="112" y2="100" stroke="var(--muted)" stroke-width="1"/>`;
+    s+=`<text x="100" y="108" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="30" fill="var(--ink)">${pct}%</text>`;
+    return s;
+  }
+  function finish(){
+    const n=run.answers.length, ok=run.ok, pct=n?Math.round(ok/n*100):0;
+    $('quiz').hidden=true; $('results').hidden=false;
+    $('target').innerHTML=targetSVG(pct);
+    $('rGrade').textContent=`${ok} / ${n}`;
+    const v = n===0?'Neatsakėte nė į vieną klausimą.':
+      pct>=90?'Puikiai – medžiaga įsisavinta.':pct>=80?'Gerai. Peržiūrėkite klaidas ir pakartokite.':pct>=60?'Vidutiniškai – verta pakartoti silpnesnes temas.':'Reikia daugiau pasiruošti – pradėkite nuo klaidų.';
+    $('rVerdict').textContent = v + (n<run.ids.length?` Atsakyta ${n} iš ${run.ids.length}.`:'' ) + ` Klaidų: ${run.no}.`;
+    const per={};
+    run.answers.forEach(a=>{const s=Q[a.qi][0];per[s]=per[s]||{ok:0,n:0};per[s].n++;if(a.ok)per[s].ok++});
+    $('rSecs').innerHTML=Object.keys(SECTIONS).filter(k=>per[k]).map(k=>{const p=Math.round(per[k].ok/per[k].n*100);
+      return `<div class="secrow"><span>${SECTIONS[k]}</span><div class="meter"><div style="width:${p}%;background:${p>=80?'var(--good)':p>=60?'var(--brass)':'var(--bad)'}"></div></div><span class="pct">${per[k].ok}/${per[k].n}</span></div>`}).join('') || '<p class="lede">Nėra duomenų.</p>';
+    const wrong=run.answers.filter(a=>!a.ok);
+    $('mistTitle').textContent = wrong.length?`Klaidos (${wrong.length})`:'Klaidų nėra';
+    const m=$('rMist'); m.innerHTML='';
+    wrong.forEach(a=>{const q=Q[a.qi]; const corr=q[4]!==undefined?q[4]:0;
+      const el=document.createElement('article');
+      el.innerHTML='<p class="mq"></p><p class="ma y"></p><p class="ma c"></p><p class="me"></p>';
+      el.querySelector('.mq').textContent=q[1];
+      el.querySelector('.ma.y').textContent='✗ Jūsų: '+q[2][a.picked];
+      el.querySelector('.ma.c').textContent='✓ Teisingai: '+q[2][corr];
+      el.querySelector('.me').textContent=q[3]||'';
+      m.appendChild(el)});
+    $('retryWrong').hidden = wrong.length===0;
+    $('retryWrong').onclick=()=>startRun(shuffle(wrong.map(a=>a.qi)));
+    window.scrollTo({top:0});
+  }
+  $('again').onclick=()=>{$('results').hidden=true;$('start').hidden=false;refreshStart();window.scrollTo({top:0})};
+})();
+</script>
+
+</body>
+</html>
