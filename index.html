@@ -199,7 +199,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid currentColor;borde
           </div>
         </div>
         <div class="row">
-          <label class="toggle"><input type="checkbox" id="onlyExam"> Tik egzamino klausimai</label>
+          <label class="toggle"><input type="checkbox" id="onlyExam"> Tik oficialūs egzamino klausimai ir uždaviniai</label>
           <label class="toggle"><input type="checkbox" id="shuffleOpts" checked> Maišyti atsakymų tvarką</label>
         </div>
       </div>
@@ -294,8 +294,9 @@ const Q = PARTS;
   const byId = Object.fromEntries(Q.map((q,i)=>[q.id,i]));
   const counts = {}; Q.forEach(q=>counts[q.s]=(counts[q.s]||0)+1);
   const EXAM = Q.map((q,i)=>i).filter(i=>Q[i].x && !Q[i].u);
-  const TASKS = Q.map((q,i)=>i).filter(i=>Q[i].u);
-  $('topMeta').textContent = `Klausimų: ${Q.length} · Egzamino: ${EXAM.length} · Uždavinių: ${TASKS.length}`;
+  const TASKS = Q.map((q,i)=>i).filter(i=>Q[i].u && Q[i].x);
+  const TASKS_ALL = Q.filter(q=>q.u).length;
+  $('topMeta').textContent = `Klausimų: ${Q.length} · Egzamino klausimų: ${EXAM.length} + ${TASKS.length} uždaviniai · Praktikos uždavinių: ${TASKS_ALL-TASKS.length}`;
 
   // ----- mode tabs
   let mode = LS.get('mode','train');
@@ -306,7 +307,7 @@ const Q = PARTS;
   }
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
   setMode(mode);
-  $('examNote').textContent = `Egzamino klausimų bazėje: ${EXAM.length}, uždavinių: ${TASKS.length}`;
+  $('examNote').textContent = `Klausimai iš oficialaus 89 klausimų sąrašo (${EXAM.length} variantai), uždavinys – vienas iš ${TASKS.length} oficialių`;
   $('openNote').textContent = `Kortelių: ${EXAM.length}`;
 
   // ----- train setup
@@ -328,7 +329,7 @@ const Q = PARTS;
   $('onlyExam').checked = LS.get('onlyEx', false);
   $('onlyExam').onchange = refreshStart;
 
-  function pool(){const ox=$('onlyExam').checked;return Q.map((q,i)=>i).filter(i=>selected.has(Q[i].s) && (!ox || Q[i].x || Q[i].u))}
+  function pool(){const ox=$('onlyExam').checked;return Q.map((q,i)=>i).filter(i=>selected.has(Q[i].s) && (!ox || Q[i].x))}
   function wrongIds(){return LS.get('wrong',[]).filter(id=>id in byId)}
   function refreshStart(){
     const p=pool().length;
@@ -387,7 +388,7 @@ const Q = PARTS;
     if(q.f===undefined && $('shuffleOpts').checked) shuffle(order);
     run.cur={qi, order};
     $('qSec').textContent=SECTIONS[q.s]||'';
-    $('qTags').innerHTML=(q.x?'<span class="tag ex">egzamino</span>':'')+(q.u?'<span class="tag ex">uždavinys</span>':'');
+    $('qTags').innerHTML=(q.x?'<span class="tag ex">egzamino</span>':'')+(q.u?'<span class="tag">uždavinys</span>':'');
     $('qText').textContent=q.q;
     const box=$('opts'); box.innerHTML=''; $('fb').innerHTML='';
     if(run.kind==='open'){
